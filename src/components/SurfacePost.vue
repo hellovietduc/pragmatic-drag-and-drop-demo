@@ -20,7 +20,10 @@ const post = computed(() => postById.value[props.id])
 const attachmentSize = computed(() => (props.mode === 'normal' ? 200 : 56))
 
 const rootEl = ref<HTMLElement>()
-const { dragIndicatorEdge } = usePostDragAndDrop({ postId: props.id, postEl: rootEl })
+const { draggingPostId, dragIndicatorEdge } = usePostDragAndDrop({
+  postId: props.id,
+  postEl: rootEl
+})
 </script>
 
 <template>
@@ -35,7 +38,8 @@ const { dragIndicatorEdge } = usePostDragAndDrop({ postId: props.id, postEl: roo
       'rounded-xl',
       'shadow-lg',
       'p-2',
-      'bg-stone-100'
+      'bg-stone-100',
+      draggingPostId === id && 'opacity-50'
     ]"
   >
     <h2 class="select-none">{{ post.subject }}</h2>

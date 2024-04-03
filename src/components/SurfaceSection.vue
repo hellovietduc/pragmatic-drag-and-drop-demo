@@ -19,11 +19,18 @@ const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
 const rootEl = ref<HTMLElement>()
-const { dragIndicatorEdge } = useSectionDragAndDrop({ sectionId: props.id, sectionEl: rootEl })
+const { draggingSectionId, dragIndicatorEdge } = useSectionDragAndDrop({
+  sectionId: props.id,
+  sectionEl: rootEl
+})
 </script>
 
 <template>
-  <section ref="rootEl" :data-dnd-section-id="id" class="relative flex flex-col gap-4">
+  <section
+    ref="rootEl"
+    :data-dnd-section-id="id"
+    :class="['relative', 'flex', 'flex-col', 'gap-4', draggingSectionId === id && 'opacity-50']"
+  >
     <!-- Section title -->
     <h1
       data-dnd-section-drag-handle

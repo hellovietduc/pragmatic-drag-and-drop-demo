@@ -26,7 +26,9 @@ export const useSectionDragAndDrop = ({
   sectionId: string
   sectionEl: Ref<HTMLElement | undefined>
 }) => {
+  const draggingSectionId = ref<string | null>(null)
   const dragIndicatorEdge = ref<Edge | null>(null)
+
   let cleanUpDraggable: () => void | undefined
   let cleanUpDropTarget: () => void | undefined
 
@@ -50,9 +52,11 @@ export const useSectionDragAndDrop = ({
       },
       onDragStart: ({ source }) => {
         console.log('🚀 section drag start', source.data)
+        draggingSectionId.value = source.data.sectionId as string
       },
       onDrop: ({ source }) => {
         console.log('🚀 section drop', source.data)
+        draggingSectionId.value = null
       }
     })
   }
@@ -104,5 +108,5 @@ export const useSectionDragAndDrop = ({
     cleanUpDropTarget?.()
   })
 
-  return { dragIndicatorEdge }
+  return { draggingSectionId, dragIndicatorEdge }
 }

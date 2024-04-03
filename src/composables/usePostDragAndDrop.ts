@@ -26,7 +26,9 @@ export const usePostDragAndDrop = ({
   postId: string
   postEl: Ref<HTMLElement | undefined>
 }) => {
+  const draggingPostId = ref<string | null>(null)
   const dragIndicatorEdge = ref<Edge | null>(null)
+
   let cleanUpDraggable: () => void | undefined
   let cleanUpDropTarget: () => void | undefined
 
@@ -48,9 +50,11 @@ export const usePostDragAndDrop = ({
       },
       onDragStart: ({ source }) => {
         console.log('🚀 post drag start', source.data)
+        draggingPostId.value = source.data.postId as string
       },
       onDrop: ({ source }) => {
         console.log('🚀 post drop', source.data)
+        draggingPostId.value = null
       }
     })
   }
@@ -103,6 +107,7 @@ export const usePostDragAndDrop = ({
   })
 
   return {
+    draggingPostId,
     dragIndicatorEdge
   }
 }
