@@ -1,5 +1,5 @@
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
-import { createApp, h, Teleport, onMounted, type Ref, ref } from 'vue'
+import { createApp, h, Teleport, type Ref, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import SurfacePost from '@/components/SurfacePost.vue'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
@@ -8,97 +8,101 @@ import {
   extractClosestEdge,
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
-import { createSharedComposable } from '@vueuse/core'
 import { isEmpty } from 'lodash-es'
 
-export const useDragIndicator = createSharedComposable(() => {
-  const dragIndicatorEdge = ref<Edge | null>(null)
-  const dragOverPostId = ref<string | null>(null)
-
-  return { dragIndicatorEdge, dragOverPostId }
-})
-
-export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> }) => {
-  const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
-
-  const makePostsDraggable = () => {
-    postEls.value.forEach((el) => {
-      const postId = el.dataset.dndPostId
-      draggable({
-        element: el,
-        getInitialData: () => {
-          return { postId }
-        },
-        onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          if (!postId) return
-          setCustomNativeDragPreview({
-            getOffset: centerUnderPointer,
-            render: ({ container }) => {
-              const app = createApp({
-                render: () =>
-                  h(Teleport, { to: container }, [
-                    h(SurfacePost, { id: postId, mode: 'drag-preview' })
-                  ])
-              })
-              app.mount(container)
-              return () => app.unmount()
-            },
-            nativeSetDragImage
-          })
-        },
-        onDragStart: (e) => {
-          console.log('🚀 post drag start', e)
-        },
-        onDrop: (e) => {
-          console.log('🚀 post drop', e)
-        }
-      })
-    })
-  }
-
-  const setupDropTargets = () => {
-    postEls.value.forEach((el) => {
-      const postId = el.dataset.dndPostId
-      dropTargetForElements({
-        element: el,
-        getData: ({ input }) => {
-          return attachClosestEdge(
-            { postId },
-            {
-              element: el,
-              input,
-              allowedEdges: ['top', 'bottom']
-            }
-          )
-        },
-        canDrop: ({ source }) => {
-          return !isEmpty(source.data.postId)
-        },
-        onDrag: ({ self, source }) => {
-          const isSource = source.element === el
-          if (isSource) {
-            dragIndicatorEdge.value = null
-            dragOverPostId.value = null
-            return
-          }
-          const closestEdge = extractClosestEdge(self.data)
-          dragIndicatorEdge.value = closestEdge
-          dragOverPostId.value = self.data.postId as string
-        },
-        onDragLeave() {
-          dragIndicatorEdge.value = null
-          dragOverPostId.value = null
-        },
-        onDrop() {
-          dragIndicatorEdge.value = null
-          dragOverPostId.value = null
-        }
-      })
-    })
-  }
-
-  onMounted(() => {
-    makePostsDraggable()
-    setupDropTargets()
+const renderDragPreview = (container: HTMLElement, { postId }: { postId: string }) => {
+  const app = createApp({
+    render: () =>
+      h(Teleport, { to: container }, [h(SurfacePost, { id: postId, mode: 'drag-preview' })])
   })
+  app.mount(container)
+  return () => app.unmount()
+}
+
+export const usePostDragAndDrop = ({
+  postId,
+  postEl
+}: {
+  postId: string
+  postEl: Ref<HTMLElement | undefined>
+}) => {
+  const dragIndicatorEdge = ref<Edge | null>(null)
+  let cleanUpDraggable: () => void | undefined
+  let cleanUpDropTarget: () => void | undefined
+
+  const makePostDraggable = () => {
+    if (!postEl.value) return
+    cleanUpDraggable = draggable({
+      element: postEl.value,
+      getInitialData: () => {
+        return { postId }
+      },
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        setCustomNativeDragPreview({
+          getOffset: centerUnderPointer,
+          render: ({ container }) => {
+            return renderDragPreview(container, { postId })
+          },
+          nativeSetDragImage
+        })
+      },
+      onDragStart: ({ source }) => {
+        console.log('🚀 post drag start', source.data)
+      },
+      onDrop: ({ source }) => {
+        console.log('🚀 post drop', source.data)
+      }
+    })
+  }
+
+  const setupDropTarget = () => {
+    if (!postEl.value) return
+    cleanUpDropTarget = dropTargetForElements({
+      element: postEl.value,
+      getData: ({ source, input }) => {
+        if (!postEl.value) return source.data
+        return attachClosestEdge(
+          { postId },
+          {
+            element: postEl.value,
+            input,
+            allowedEdges: ['top', 'bottom']
+          }
+        )
+      },
+      canDrop: ({ source }) => {
+        return !isEmpty(source.data.postId)
+      },
+      onDrag: ({ self, source }) => {
+        const isSource = source.element === postEl.value
+        if (isSource) {
+          dragIndicatorEdge.value = null
+          return
+        }
+        const closestEdge = extractClosestEdge(self.data)
+        dragIndicatorEdge.value = closestEdge
+      },
+      onDragLeave() {
+        dragIndicatorEdge.value = null
+      },
+      onDrop() {
+        dragIndicatorEdge.value = null
+      }
+    })
+  }
+
+  onMounted(async () => {
+    await nextTick()
+    makePostDraggable()
+    setupDropTarget()
+  })
+
+  onBeforeUnmount(() => {
+    cleanUpDraggable?.()
+    cleanUpDropTarget?.()
+  })
+
+  return {
+    dragIndicatorEdge
+  }
 }

@@ -3,8 +3,7 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useDragIndicator } from '@/composables/useSectionDragAndDrop'
-import { usePostDragAndDrop } from '@/composables/usePostDragAndDrop'
+import { useSectionDragAndDrop } from '@/composables/useSectionDragAndDrop'
 
 const props = withDefaults(
   defineProps<{
@@ -19,15 +18,12 @@ const props = withDefaults(
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
-const surfacePosts = ref<InstanceType<typeof SurfacePost>[]>([])
-const postEls = computed(() => surfacePosts.value.map((post) => post.$el))
-
-const { dragIndicatorEdge, dragOverSectionId } = useDragIndicator()
-usePostDragAndDrop({ postEls })
+const rootEl = ref<HTMLElement>()
+const { dragIndicatorEdge } = useSectionDragAndDrop({ sectionId: props.id, sectionEl: rootEl })
 </script>
 
 <template>
-  <section :data-dnd-section-id="id" class="relative flex flex-col gap-4">
+  <section ref="rootEl" :data-dnd-section-id="id" class="relative flex flex-col gap-4">
     <!-- Section title -->
     <h1
       data-dnd-section-drag-handle
@@ -41,13 +37,12 @@ usePostDragAndDrop({ postEls })
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
-        ref="surfacePosts"
         :id="post.id"
         class="my-2"
       />
     </div>
     <DragIndicator
-      v-if="dragOverSectionId === id"
+      v-if="dragIndicatorEdge"
       :orientation="DragIndicatorOrientation.Vertical"
       :class="[
         '!absolute',

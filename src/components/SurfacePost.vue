@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useDragIndicator } from '@/composables/usePostDragAndDrop'
+import { usePostDragAndDrop } from '@/composables/usePostDragAndDrop'
 
 const props = withDefaults(
   defineProps<{
@@ -19,11 +19,13 @@ const post = computed(() => postById.value[props.id])
 
 const attachmentSize = computed(() => (props.mode === 'normal' ? 200 : 56))
 
-const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
+const rootEl = ref<HTMLElement>()
+const { dragIndicatorEdge } = usePostDragAndDrop({ postId: props.id, postEl: rootEl })
 </script>
 
 <template>
   <article
+    ref="rootEl"
     :data-dnd-post-id="id"
     :class="[
       'relative',
@@ -47,7 +49,7 @@ const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
       draggable="false"
     />
     <DragIndicator
-      v-if="dragOverPostId === id"
+      v-if="dragIndicatorEdge"
       :orientation="DragIndicatorOrientation.Horizontal"
       :class="[
         '!absolute',
