@@ -1,5 +1,6 @@
-import { groupBy, uniqueId } from 'lodash-es'
+import { groupBy, keyBy, uniqueId } from 'lodash-es'
 import { computed, ref } from 'vue'
+import { createSharedComposable } from '@vueuse/core'
 
 export interface Section {
   id: string
@@ -35,14 +36,14 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number) =
   })
 }
 
-export const useDummyData = () => {
+export const useDummyData = createSharedComposable(() => {
   const sections = ref<Section[]>(generateSections(5))
   const posts = ref<Post[]>(
     sections.value.map((section, index) => generatePosts(7, section.id, index)).flat()
   )
 
-  const sectionById = computed(() => groupBy(sections.value, 'id'))
-  const postById = computed(() => groupBy(posts.value, 'id'))
+  const sectionById = computed(() => keyBy(sections.value, 'id'))
+  const postById = computed(() => keyBy(posts.value, 'id'))
   const postsBySectionId = computed(() => groupBy(posts.value, 'sectionId'))
 
   return {
@@ -52,4 +53,4 @@ export const useDummyData = () => {
     postById,
     postsBySectionId
   }
-}
+})

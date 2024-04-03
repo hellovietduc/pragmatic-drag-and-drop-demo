@@ -1,13 +1,7 @@
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 import { onMounted, type Ref } from 'vue'
 
-export const usePostDragAndDrop = ({
-  postEls,
-  sectionEls
-}: {
-  postEls: Ref<HTMLElement[]>
-  sectionEls: Ref<HTMLElement[]>
-}) => {
+export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> }) => {
   const makePostsDraggable = () => {
     postEls.value.forEach((el) => {
       draggable({
@@ -22,6 +16,12 @@ export const usePostDragAndDrop = ({
     })
   }
 
+  onMounted(() => {
+    makePostsDraggable()
+  })
+}
+
+export const usePostDragAndDropSetup = ({ sectionEls }: { sectionEls: Ref<HTMLElement[]> }) => {
   const setupDropTargets = () => {
     sectionEls.value.forEach((el) => {
       const dropTarget = el.querySelector('[data-dnd-post-drop-target]')
@@ -33,7 +33,6 @@ export const usePostDragAndDrop = ({
   }
 
   onMounted(() => {
-    makePostsDraggable()
     setupDropTargets()
   })
 }
