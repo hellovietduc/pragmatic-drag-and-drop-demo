@@ -24,7 +24,7 @@ const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
 
 <template>
   <article
-    :data-dnd-post-id="post.id"
+    :data-dnd-post-id="id"
     :class="[
       'relative',
       'flex',
@@ -47,7 +47,7 @@ const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
       draggable="false"
     />
     <DragIndicator
-      v-if="dragOverPostId === post.id"
+      v-if="dragOverPostId === id"
       :orientation="DragIndicatorOrientation.Horizontal"
       :class="[
         '!absolute',

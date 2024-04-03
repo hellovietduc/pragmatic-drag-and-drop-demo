@@ -13,12 +13,13 @@ useSectionDragAndDrop({ sectionEls })
 </script>
 
 <template>
-  <main class="flex justify-center items-center gap-5 p-10 bg-gray-200">
+  <main class="flex justify-center items-center p-10 bg-gray-200">
     <SurfaceSection
       v-for="section in sections"
       :key="section.id"
       ref="surfaceSections"
       :id="section.id"
+      class="mx-2.5"
     />
   </main>
 </template>

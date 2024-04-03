@@ -9,6 +9,7 @@ import {
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { createSharedComposable } from '@vueuse/core'
+import { isEmpty } from 'lodash-es'
 
 export const useDragIndicator = createSharedComposable(() => {
   const dragIndicatorEdge = ref<Edge | null>(null)
@@ -25,6 +26,9 @@ export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> })
       const postId = el.dataset.dndPostId
       draggable({
         element: el,
+        getInitialData: () => {
+          return { postId }
+        },
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           if (!postId) return
           setCustomNativeDragPreview({
@@ -66,6 +70,9 @@ export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> })
               allowedEdges: ['top', 'bottom']
             }
           )
+        },
+        canDrop: ({ source }) => {
+          return !isEmpty(source.data.postId)
         },
         onDrag: ({ self, source }) => {
           const isSource = source.element === el
