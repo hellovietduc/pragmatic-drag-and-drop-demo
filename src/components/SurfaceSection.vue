@@ -3,44 +3,44 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useSectionDragAndDrop } from '@/composables/useSectionDragAndDrop'
+import { useDragAndDrop } from '@/composables/useDragAndDrop'
+import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 
-const props = withDefaults(
-  defineProps<{
-    id: string
-    mode?: 'normal' | 'drag-preview'
-  }>(),
-  {
-    mode: 'normal'
-  }
-)
+const props = defineProps<{
+  id: string
+}>()
 
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
 const rootEl = ref<HTMLElement>()
-const { draggingSectionId, dragIndicatorEdge } = useSectionDragAndDrop({
-  sectionId: props.id,
-  sectionEl: rootEl
+const dragHandle = ref<HTMLElement>()
+
+const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
+  elementRef: rootEl,
+  itemData: { type: 'section', sectionId: props.id },
+  dragPreviewComponent: SurfaceSectionDragPreview,
+  dragPreviewComponentProps: { id: props.id },
+  dropTargetEdges: ['left', 'right'],
+  dragHandleElementRef: dragHandle,
+  canDrop: ({ type }) => type === 'section'
 })
+
+const draggingSectionId = computed(() => draggingItemData.value?.sectionId)
 </script>
 
 <template>
   <section
     ref="rootEl"
-    :data-dnd-section-id="id"
     :class="['relative', 'flex', 'flex-col', 'gap-4', draggingSectionId === id && 'opacity-50']"
   >
     <!-- Section title -->
-    <h1
-      data-dnd-section-drag-handle
-      class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none"
-    >
+    <h1 ref="dragHandle" class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">
       {{ section.title }}
     </h1>
 
     <!-- Post list -->
-    <div v-if="mode === 'normal'" class="flex flex-col">
+    <div class="flex flex-col">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"

@@ -1,40 +1,38 @@
 <script setup lang="ts">
+import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { usePostDragAndDrop } from '@/composables/usePostDragAndDrop'
+import { useDragAndDrop } from '@/composables/useDragAndDrop'
 
-const props = withDefaults(
-  defineProps<{
-    id: string
-    mode?: 'normal' | 'drag-preview'
-  }>(),
-  {
-    mode: 'normal'
-  }
-)
+const props = defineProps<{
+  id: string
+}>()
 
 const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
-const attachmentSize = computed(() => (props.mode === 'normal' ? 200 : 56))
-
 const rootEl = ref<HTMLElement>()
-const { draggingPostId, dragIndicatorEdge } = usePostDragAndDrop({
-  postId: props.id,
-  postEl: rootEl
+const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
+  elementRef: rootEl,
+  itemData: { type: 'post', postId: props.id },
+  dragPreviewComponent: SurfacePostDragPreview,
+  dragPreviewComponentProps: { id: props.id },
+  dropTargetEdges: ['top', 'bottom'],
+  canDrop: ({ type }) => type === 'post'
 })
+
+const draggingPostId = computed(() => draggingItemData.value?.postId)
 </script>
 
 <template>
   <article
     ref="rootEl"
-    :data-dnd-post-id="id"
     :class="[
       'relative',
       'flex',
-      mode === 'normal' && 'flex-col gap-2',
-      mode === 'drag-preview' && 'justify-between w-64',
+      'flex-col',
+      'gap-2',
       'rounded-xl',
       'shadow-lg',
       'p-2',
@@ -47,9 +45,9 @@ const { draggingPostId, dragIndicatorEdge } = usePostDragAndDrop({
       :src="post.attachment"
       alt="Attachment"
       class="rounded-lg overflow-hidden"
-      :width="attachmentSize"
-      :height="attachmentSize"
-      :style="{ width: `${attachmentSize}px`, height: `${attachmentSize}px` }"
+      :width="200"
+      :height="200"
+      :style="{ width: `200px`, height: `200px` }"
       draggable="false"
     />
     <DragIndicator
