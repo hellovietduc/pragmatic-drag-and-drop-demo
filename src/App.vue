@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useSectionDragAndDrop } from '@/composables/useSectionDragAndDrop'
-import { usePostDragAndDropSetup } from '@/composables/usePostDragAndDrop'
 import { useDummyData } from '@/composables/useDummyData'
 import SurfaceSection from '@/components/SurfaceSection.vue'
 
@@ -11,7 +10,6 @@ const surfaceSections = ref<InstanceType<typeof SurfaceSection>[]>([])
 const sectionEls = computed(() => surfaceSections.value.map((section) => section.$el))
 
 useSectionDragAndDrop({ sectionEls })
-usePostDragAndDropSetup({ sectionEls})
 </script>
 
 <template>

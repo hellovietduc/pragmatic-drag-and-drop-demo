@@ -1,10 +1,25 @@
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
-import { createApp, h, Teleport, onMounted, type Ref } from 'vue'
+import { createApp, h, Teleport, onMounted, type Ref, ref } from 'vue'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import SurfacePost from '@/components/SurfacePost.vue'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
+import {
+  attachClosestEdge,
+  extractClosestEdge,
+  type Edge
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+import { createSharedComposable } from '@vueuse/core'
+
+export const useDragIndicator = createSharedComposable(() => {
+  const dragIndicatorEdge = ref<Edge | null>(null)
+  const dragOverPostId = ref<string | null>(null)
+
+  return { dragIndicatorEdge, dragOverPostId }
+})
 
 export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> }) => {
+  const { dragIndicatorEdge, dragOverPostId } = useDragIndicator()
+
   const makePostsDraggable = () => {
     postEls.value.forEach((el) => {
       const postId = el.dataset.dndPostId
@@ -37,23 +52,46 @@ export const usePostDragAndDrop = ({ postEls }: { postEls: Ref<HTMLElement[]> })
     })
   }
 
-  onMounted(() => {
-    makePostsDraggable()
-  })
-}
-
-export const usePostDragAndDropSetup = ({ sectionEls }: { sectionEls: Ref<HTMLElement[]> }) => {
   const setupDropTargets = () => {
-    sectionEls.value.forEach((el) => {
-      const dropTarget = el.querySelector('[data-dnd-post-drop-target]')
-      if (!dropTarget) return
+    postEls.value.forEach((el) => {
+      const postId = el.dataset.dndPostId
       dropTargetForElements({
-        element: dropTarget
+        element: el,
+        getData: ({ input }) => {
+          return attachClosestEdge(
+            { postId },
+            {
+              element: el,
+              input,
+              allowedEdges: ['top', 'bottom']
+            }
+          )
+        },
+        onDrag: ({ self, source }) => {
+          const isSource = source.element === el
+          if (isSource) {
+            dragIndicatorEdge.value = null
+            dragOverPostId.value = null
+            return
+          }
+          const closestEdge = extractClosestEdge(self.data)
+          dragIndicatorEdge.value = closestEdge
+          dragOverPostId.value = self.data.postId as string
+        },
+        onDragLeave() {
+          dragIndicatorEdge.value = null
+          dragOverPostId.value = null
+        },
+        onDrop() {
+          dragIndicatorEdge.value = null
+          dragOverPostId.value = null
+        }
       })
     })
   }
 
   onMounted(() => {
+    makePostsDraggable()
     setupDropTargets()
   })
 }

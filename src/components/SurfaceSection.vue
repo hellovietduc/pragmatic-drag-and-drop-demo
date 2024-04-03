@@ -34,12 +34,13 @@ usePostDragAndDrop({ postEls })
     </h1>
 
     <!-- Post list -->
-    <div v-if="mode === 'normal'" class="flex flex-col gap-4" data-dnd-post-drop-target>
+    <div v-if="mode === 'normal'" class="flex flex-col">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
         ref="surfacePosts"
         :id="post.id"
+        class="my-2"
       />
     </div>
   </section>

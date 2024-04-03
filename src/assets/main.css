@@ -1,1 +1,6 @@
 @import 'tailwindcss';
+
+@theme {
+  --color-grape-500: #9466e8;
+  --color-canary-500: #fec006;
+}
