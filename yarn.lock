@@ -296,6 +296,81 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.10.1.tgz#7ca168b6937818e9a74b47ac4e2112b2e1a024cf"
   integrity sha512-S3Kq8e7LqxkA9s7HKLqXGTGck1uwis5vAXan3FnU5yw1Ec5hsSGnq4s/UCaSqABPOnOTg7zASLyst7+ohgWexg==
 
+"@tailwindcss/oxide-android-arm64@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-android-arm64/-/oxide-android-arm64-4.0.0-alpha.11.tgz#888b9578bb9f04ece587eb9dc5518e891a760ba1"
+  integrity sha512-qi19QzHktzkxv/IOtmW+gK3QW0ZAPvGZQsl/wGC4AmX50sONitNcVPQ9gVSnlJieoYc90jEo5qAHToBai8Af1Q==
+
+"@tailwindcss/oxide-darwin-arm64@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-darwin-arm64/-/oxide-darwin-arm64-4.0.0-alpha.11.tgz#8b7e2cbe67ee9764fde222083fbad6b8d86d5f24"
+  integrity sha512-Euk0uCWQq9HdMTK3p19JEvZj19jqj2XUapGnZUpUJC9OAcdfpgtNRcvkeDgYR5u+dyMt+V/2d5hF8CHYP6/cNA==
+
+"@tailwindcss/oxide-darwin-x64@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-darwin-x64/-/oxide-darwin-x64-4.0.0-alpha.11.tgz#0c522cc179a9f164df2208f401878016ab2bdccf"
+  integrity sha512-Fp2DPc+W08u6iCBc2YzmZEnNq9PwsE+cFIpSem9fixHeevk0DnUBz/qE+qvBcJ7gqKrMN2qscLtUzqI2TFj11Q==
+
+"@tailwindcss/oxide-freebsd-x64@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-freebsd-x64/-/oxide-freebsd-x64-4.0.0-alpha.11.tgz#cc07e372417118704f63e6d7f64a0556be2b93a2"
+  integrity sha512-ff52UF8Xp4osa7+klJ6Jkub34y3PzaR/ncuu5gWZHz2HbEy9+NzNAbL5k9If/UlOWhXpj1xYxe0NMhD9swdSPQ==
+
+"@tailwindcss/oxide-linux-arm-gnueabihf@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-arm-gnueabihf/-/oxide-linux-arm-gnueabihf-4.0.0-alpha.11.tgz#3214557d363e52b5497049da671ac167ae9a1ffc"
+  integrity sha512-2o//pMgEMXm+93dUTwiBZtj2il742tsYq9qPdgGoD4BKlhL/+mkotUZ/R9NA27bgCdvZb1yK96Nh/cbzTqRsvw==
+
+"@tailwindcss/oxide-linux-arm64-gnu@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-arm64-gnu/-/oxide-linux-arm64-gnu-4.0.0-alpha.11.tgz#8b87a54daf413e911ba45314723fc0c0f03a3cf2"
+  integrity sha512-qWx/C8NZpABS7VnXPsGkLP3OnJiz0buAgIisPJ+fdgRRLaX9pYrtJdd0a8ZG+Z8LawGsEGUGATGUwPGhpBH9EQ==
+
+"@tailwindcss/oxide-linux-arm64-musl@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-arm64-musl/-/oxide-linux-arm64-musl-4.0.0-alpha.11.tgz#14fdf925c455ae044d274dbcc1392981f93e33de"
+  integrity sha512-lMPzrRALtI702kipt1pbRkTLNuRqcbYYM4Z8eX3Ld83jA3qBHuykSV1e1JUFzX+YNpIOi97fG3REQg3Oo2sycA==
+
+"@tailwindcss/oxide-linux-x64-gnu@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.0.0-alpha.11.tgz#75ea0c407565569fdeff07a4e4517e3f0cb75831"
+  integrity sha512-XfJ3R9hgxf4pY2y6nedQQ9rvZrn5xsusmbCVJtvRLlBNjDHXucZxa6GAT9bbDTyqARLm5nN7QqJOef3Bi56uVQ==
+
+"@tailwindcss/oxide-linux-x64-musl@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-linux-x64-musl/-/oxide-linux-x64-musl-4.0.0-alpha.11.tgz#de2894e4cd9273259c6f855a5edff12afa6b2620"
+  integrity sha512-N96utHhVp199QRvBtXx2D2CkUcfgWVPfXCUHQIa+zEn+b3I0PtkBOerRe08QdIP/iSeQZTWoxvrDB4JUFO8PtA==
+
+"@tailwindcss/oxide-win32-x64-msvc@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide-win32-x64-msvc/-/oxide-win32-x64-msvc-4.0.0-alpha.11.tgz#04561a9a0d8cf5b5c4566fe5f20f8e59b316358d"
+  integrity sha512-uBKEb0TI2JIJbKFIfaMtKrqbfGMvD/mb/plDHAauxu3zk19Ew+mrnju+JvTc1YuZt0/s8bFyV1hltBpPG8d5Zw==
+
+"@tailwindcss/oxide@4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/oxide/-/oxide-4.0.0-alpha.11.tgz#5a224c3602a901b70768266283547092622d937c"
+  integrity sha512-lm7JE4JekG0tFgXSyBs4o3zhYA87hPxuYLzzPRQeTI72fJiCZmi6WbeTxzsaC0l3WI/o9U4pXoNRyeYSfsqdHQ==
+  optionalDependencies:
+    "@tailwindcss/oxide-android-arm64" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-darwin-arm64" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-darwin-x64" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-freebsd-x64" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-linux-arm-gnueabihf" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-linux-arm64-gnu" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-linux-arm64-musl" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-linux-x64-gnu" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-linux-x64-musl" "4.0.0-alpha.11"
+    "@tailwindcss/oxide-win32-x64-msvc" "4.0.0-alpha.11"
+
+"@tailwindcss/vite@^4.0.0-alpha.11":
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/vite/-/vite-4.0.0-alpha.11.tgz#ef7f614a12c91721e54fe6547b20173d6525f02d"
+  integrity sha512-VIeE6r5dMh+CLpIEiFFEw474QyQznXsBNJLz4GZ2kGtRqKxnHBjvPnA0EHSBpHZxVTeP/nyj1zopjK6kqInfKw==
+  dependencies:
+    "@tailwindcss/oxide" "4.0.0-alpha.11"
+    lightningcss "^1.24.0"
+    tailwindcss "4.0.0-alpha.11"
+
 "@tsconfig/node20@^20.1.2":
   version "20.1.4"
   resolved "https://registry.yarnpkg.com/@tsconfig/node20/-/node20-20.1.4.tgz#3457d42eddf12d3bde3976186ab0cd22b85df928"
@@ -310,6 +385,18 @@
   version "7.0.15"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
+
+"@types/lodash-es@^4.17.12":
+  version "4.17.12"
+  resolved "https://registry.yarnpkg.com/@types/lodash-es/-/lodash-es-4.17.12.tgz#65f6d1e5f80539aa7cfbfc962de5def0cf4f341b"
+  integrity sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash@*":
+  version "4.17.0"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.0.tgz#d774355e41f372d5350a4d0714abb48194a489c3"
+  integrity sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==
 
 "@types/node@^20.11.28":
   version "20.12.3"
@@ -704,6 +791,11 @@ deep-is@^0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
+
+detect-libc@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
+  integrity sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==
 
 dir-glob@^3.0.1:
   version "3.0.1"
@@ -1136,12 +1228,79 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
+lightningcss-darwin-arm64@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.24.1.tgz#551735defa1e092ecf91244ca081f65f10ebd5f0"
+  integrity sha512-1jQ12jBy+AE/73uGQWGSafK5GoWgmSiIQOGhSEXiFJSZxzV+OXIx+a9h2EYHxdJfX864M+2TAxWPWb0Vv+8y4w==
+
+lightningcss-darwin-x64@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.24.1.tgz#5acb1338ac0aae38e405efd854ed97ba11509eea"
+  integrity sha512-R4R1d7VVdq2mG4igMU+Di8GPf0b64ZLnYVkubYnGG0Qxq1KaXQtAzcLI43EkpnoWvB/kUg8JKCWH4S13NfiLcQ==
+
+lightningcss-freebsd-x64@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.24.1.tgz#ff692c41ed0bbf37ab5a239db4c2fc04c11195e6"
+  integrity sha512-z6NberUUw5ALES6Ixn2shmjRRrM1cmEn1ZQPiM5IrZ6xHHL5a1lPin9pRv+w6eWfcrEo+qGG6R9XfJrpuY3e4g==
+
+lightningcss-linux-arm-gnueabihf@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.24.1.tgz#ba41556f4422a6a889553ad897898a314386153e"
+  integrity sha512-NLQLnBQW/0sSg74qLNI8F8QKQXkNg4/ukSTa+XhtkO7v3BnK19TS1MfCbDHt+TTdSgNEBv0tubRuapcKho2EWw==
+
+lightningcss-linux-arm64-gnu@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.24.1.tgz#6b569b6078634233bc470c4179dd67e535f22d73"
+  integrity sha512-AQxWU8c9E9JAjAi4Qw9CvX2tDIPjgzCTrZCSXKELfs4mCwzxRkHh2RCxX8sFK19RyJoJAjA/Kw8+LMNRHS5qEg==
+
+lightningcss-linux-arm64-musl@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.24.1.tgz#644abd32c09c87228bfb5dda21e8d3f75da6f731"
+  integrity sha512-JCgH/SrNrhqsguUA0uJUM1PvN5+dVuzPIlXcoWDHSv2OU/BWlj2dUYr3XNzEw748SmNZPfl2NjQrAdzaPOn1lA==
+
+lightningcss-linux-x64-gnu@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.24.1.tgz#0633f2daa2b6a2806abd497337346c2941865eec"
+  integrity sha512-TYdEsC63bHV0h47aNRGN3RiK7aIeco3/keN4NkoSQ5T8xk09KHuBdySltWAvKLgT8JvR+ayzq8ZHnL1wKWY0rw==
+
+lightningcss-linux-x64-musl@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.24.1.tgz#6ed1714737e4af2249ed10f431bc8137bd6cc4c7"
+  integrity sha512-HLfzVik3RToot6pQ2Rgc3JhfZkGi01hFetHt40HrUMoeKitLoqUUT5owM6yTZPTytTUW9ukLBJ1pc3XNMSvlLw==
+
+lightningcss-win32-x64-msvc@1.24.1:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.24.1.tgz#bd6b562d902e0f92904ac3754c722d9e63e00480"
+  integrity sha512-joEupPjYJ7PjZtDsS5lzALtlAudAbgIBMGJPNeFe5HfdmJXFd13ECmEM+5rXNxYVMRHua2w8132R6ab5Z6K9Ow==
+
+lightningcss@^1.24.0:
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/lightningcss/-/lightningcss-1.24.1.tgz#8b86a5ee6e6ae9e035ff92892bd047b8d687581e"
+  integrity sha512-kUpHOLiH5GB0ERSv4pxqlL0RYKnOXtgGtVe7shDGfhS0AZ4D1ouKFYAcLcZhql8aMspDNzaUCumGHZ78tb2fTg==
+  dependencies:
+    detect-libc "^1.0.3"
+  optionalDependencies:
+    lightningcss-darwin-arm64 "1.24.1"
+    lightningcss-darwin-x64 "1.24.1"
+    lightningcss-freebsd-x64 "1.24.1"
+    lightningcss-linux-arm-gnueabihf "1.24.1"
+    lightningcss-linux-arm64-gnu "1.24.1"
+    lightningcss-linux-arm64-musl "1.24.1"
+    lightningcss-linux-x64-gnu "1.24.1"
+    lightningcss-linux-x64-musl "1.24.1"
+    lightningcss-win32-x64-msvc "1.24.1"
+
 locate-path@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/locate-path/-/locate-path-6.0.0.tgz#55321eb309febbc59c4801d931a72452a681d286"
   integrity sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==
   dependencies:
     p-locate "^5.0.0"
+
+lodash-es@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.21.tgz#43e626c46e6591b7750beb2b50117390c609e3ee"
+  integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
 
 lodash.merge@^4.6.2:
   version "4.6.2"
@@ -1505,6 +1664,11 @@ synckit@^0.8.6:
   dependencies:
     "@pkgr/core" "^0.1.0"
     tslib "^2.6.2"
+
+tailwindcss@4.0.0-alpha.11, tailwindcss@^4.0.0-alpha.11:
+  version "4.0.0-alpha.11"
+  resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-4.0.0-alpha.11.tgz#39d430622217a4215da04803b7f02027fa5cc883"
+  integrity sha512-tcRCkmHk2ACB5bghyizZG4pVA/SCr9BEE/Gbjex4axCRGQNFjbJJ3uXR/2d+ItCAUxSKYgy5LhlJc6mR8dDnrQ==
 
 text-table@^0.2.0:
   version "0.2.0"
