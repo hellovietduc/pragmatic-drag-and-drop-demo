@@ -1,40 +1,16 @@
 <script setup lang="ts">
-import { uniqueId } from 'lodash-es'
 import { ref } from 'vue'
 import { usePostDragAndDrop } from '@/composables/usePostDragAndDrop'
 import { useSectionDragAndDrop } from '@/composables/useSectionDragAndDrop'
+import { useDummyData } from '@/composables/useDummyData'
 
-// START DUMMY DATA
-const generateSections = (count: number) => {
-  return Array.from({ length: count }, (_, index) => {
-    const id = uniqueId('section')
-    return {
-      id,
-      title: `Section: ${id}`,
-      posts: generatePosts(10, index)
-    }
-  })
-}
-
-const generatePosts = (count: number, sectionIndex: number) => {
-  return Array.from({ length: count }, (_, index) => {
-    const id = uniqueId('post')
-    return {
-      id,
-      subject: `Post: ${id}`,
-      attachment: `https://padlet.net/monsters/${(sectionIndex + 1) * (index + 1)}.png`
-    }
-  })
-}
-
-const sections = generateSections(5)
-// END DUMMY DATA
+const { sections, postsBySectionId } = useDummyData()
 
 const sectionEls = ref<HTMLElement[]>([])
 const postEls = ref<HTMLElement[]>([])
 
 useSectionDragAndDrop({ sectionEls })
-usePostDragAndDrop({ postEls })
+usePostDragAndDrop({ postEls, sectionEls })
 </script>
 
 <template>
@@ -51,9 +27,9 @@ usePostDragAndDrop({ postEls })
       </h1>
 
       <!-- Post list -->
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4" data-dnd-post-drop-target>
         <article
-          v-for="post in section.posts"
+          v-for="post in postsBySectionId[section.id]"
           :key="post.id"
           ref="postEls"
           class="flex flex-col gap-2 rounded-xl shadow-lg p-2 bg-stone-100 select-none"
