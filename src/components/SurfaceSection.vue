@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import { usePostDragAndDrop } from '@/composables/usePostDragAndDrop'
@@ -16,7 +17,8 @@ const props = withDefaults(
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
-const postEls = ref<HTMLElement[]>([])
+const surfacePosts = ref<InstanceType<typeof SurfacePost>[]>([])
+const postEls = computed(() => surfacePosts.value.map((post) => post.$el))
 
 usePostDragAndDrop({ postEls })
 </script>
@@ -33,23 +35,12 @@ usePostDragAndDrop({ postEls })
 
     <!-- Post list -->
     <div v-if="mode === 'normal'" class="flex flex-col gap-4" data-dnd-post-drop-target>
-      <article
+      <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
-        ref="postEls"
-        class="flex flex-col gap-2 rounded-xl shadow-lg p-2 bg-stone-100 select-none"
-      >
-        <h2>{{ post.subject }}</h2>
-        <img
-          :src="post.attachment"
-          alt="Attachment"
-          class="rounded-lg overflow-hidden"
-          :width="200"
-          :height="200"
-          :style="{ width: '200px', height: '200px' }"
-          draggable="false"
-        />
-      </article>
+        ref="surfacePosts"
+        :id="post.id"
+      />
     </div>
   </section>
 </template>
