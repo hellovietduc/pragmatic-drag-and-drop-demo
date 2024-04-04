@@ -3,7 +3,11 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useElementDragAndDrop, type OnDropPayload } from '@/composables/useElementDragAndDrop'
+import {
+  useElementDragAndDrop,
+  useDragAndDropAutoScroll,
+  type OnDropPayload
+} from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
 import type { SectionDragData } from '@/composables/useSectionReorder'
@@ -32,11 +36,12 @@ const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
   dragPreviewComponentProps: { id: props.id },
-  scrollContainerElementRef: scrollContainer,
   onDrop: (payload) => emit('reorder', payload)
 })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
+
+useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer })
 
 const { reorderPost } = usePostReorder()
 

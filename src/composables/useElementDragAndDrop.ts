@@ -85,7 +85,6 @@ export const useElementDragAndDrop = <
   dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
-  scrollContainerElementRef,
   onDrop
 }: {
   /**
@@ -118,10 +117,6 @@ export const useElementDragAndDrop = <
    * Props to be passed to the drag preview component.
    */
   dragPreviewComponentProps?: TDragPreviewComponentProps
-  /**
-   * Element to be enable auto-scrolling for.
-   */
-  scrollContainerElementRef?: Ref<HTMLElement | undefined>
   /**
    * Event handler for when a draggable element is dropped on a drop target.
    */
@@ -222,20 +217,10 @@ export const useElementDragAndDrop = <
     })
   }
 
-  /**
-   * Enables auto-scrolling for the scroll container.
-   */
-  const enableAutoScroll = () => {
-    if (!scrollContainerElementRef?.value) return noOp
-    return autoScrollForElements({
-      element: scrollContainerElementRef.value
-    })
-  }
-
   let cleanUp: CleanupFn
 
   onMounted(() => {
-    cleanUp = combine(makeElementDraggable(), setUpDropTarget(), enableAutoScroll())
+    cleanUp = combine(makeElementDraggable(), setUpDropTarget())
   })
 
   onBeforeUnmount(() => {
@@ -248,4 +233,34 @@ export const useElementDragAndDrop = <
   }
 }
 
+/**
+ * Enables auto-scrolling for the scroll container in a draggable list.
+ */
+const useDragAndDropAutoScroll = ({
+  scrollContainerElementRef
+}: {
+  /**
+   * Element to enable auto-scrolling for.
+   */
+  scrollContainerElementRef: Ref<HTMLElement | undefined>
+}) => {
+  const enableAutoScroll = () => {
+    if (!scrollContainerElementRef.value) return noOp
+    return autoScrollForElements({
+      element: scrollContainerElementRef.value
+    })
+  }
+
+  let cleanUp: CleanupFn
+
+  onMounted(() => {
+    cleanUp = enableAutoScroll()
+  })
+
+  onBeforeUnmount(() => {
+    cleanUp?.()
+  })
+}
+
+export { useDragAndDropAutoScroll }
 export type { DragData, ItemState, ItemData, OnDropPayload }
