@@ -37,9 +37,14 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number) =
 }
 
 export const useDummyData = createSharedComposable(() => {
-  const sections = ref<Section[]>(generateSections(5))
-  const posts = ref<Post[]>(
-    sections.value.map((section, index) => generatePosts(7, section.id, index)).flat()
+  const sectionsCount = ref(5)
+  const postsPerSectionCount = ref(7)
+
+  const sections = computed(() => generateSections(sectionsCount.value))
+  const posts = computed(() =>
+    sections.value.flatMap((section, index) =>
+      generatePosts(postsPerSectionCount.value, section.id, index)
+    )
   )
 
   const sectionById = computed(() => keyBy(sections.value, 'id'))
@@ -47,6 +52,9 @@ export const useDummyData = createSharedComposable(() => {
   const postsBySectionId = computed(() => groupBy(posts.value, 'sectionId'))
 
   return {
+    sectionsCount,
+    postsPerSectionCount,
+
     sections,
     posts,
     sectionById,

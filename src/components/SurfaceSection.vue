@@ -34,7 +34,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
 <template>
   <section
     ref="rootEl"
-    :class="['relative', 'flex', 'flex-col', 'gap-4', 'h-screen', isDragging && 'opacity-40']"
+    :class="['relative', 'flex', 'flex-col', 'gap-4', 'h-full', isDragging && 'opacity-40']"
   >
     <!-- Section title -->
     <h1 ref="dragHandle" class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">
@@ -42,12 +42,12 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
     </h1>
 
     <!-- Post list -->
-    <div ref="scrollContainer" class="flex flex-col overflow-scroll">
+    <div ref="scrollContainer" class="flex flex-col overflow-y-scroll">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
         :id="post.id"
-        class="my-2"
+        class="my-2 first:mt-0 last:mb-0"
       />
     </div>
     <DragIndicator
