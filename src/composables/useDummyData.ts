@@ -5,6 +5,7 @@ import { createSharedComposable } from '@vueuse/core'
 export interface Section {
   id: string
   title: string
+  sortIndex: number
 }
 
 export interface Post {
@@ -15,17 +16,18 @@ export interface Post {
   sortIndex: number
 }
 
-const generateSections = (count: number) => {
-  return Array.from({ length: count }, () => {
+const generateSections = (count: number): Section[] => {
+  return Array.from({ length: count }, (_, index) => {
     const id = uniqueId('section')
     return {
       id,
-      title: `Section: ${id}`
+      title: `Section: ${id}`,
+      sortIndex: index * 1000 + 1000
     }
   })
 }
 
-const generatePosts = (count: number, sectionId: string, sectionIndex: number) => {
+const generatePosts = (count: number, sectionId: string, sectionIndex: number): Post[] => {
   return Array.from({ length: count }, (_, index) => {
     const id = uniqueId('post')
     return {
@@ -67,6 +69,8 @@ export const useDummyData = createSharedComposable(() => {
 
   const sectionById = computed(() => keyBy(sections.value, 'id'))
   const postById = computed(() => keyBy(posts.value, 'id'))
+
+  const sortedSections = computed(() => sortBy(sections.value, 'sortIndex'))
   const postsBySectionId = computed(() =>
     mapValues(groupBy(posts.value, 'sectionId'), (posts) => sortBy(posts, 'sortIndex'))
   )
@@ -74,11 +78,13 @@ export const useDummyData = createSharedComposable(() => {
   return {
     sectionsCount,
     postsPerSectionCount,
-
     sections,
     posts,
+
     sectionById,
     postById,
+
+    sortedSections,
     postsBySectionId
   }
 })

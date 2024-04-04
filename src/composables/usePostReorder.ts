@@ -38,7 +38,7 @@ export const usePostReorder = () => {
     if (!previousPost) {
       newSortIndex = nextPost.sortIndex / 2
     } else if (!nextPost) {
-      newSortIndex = previousPost.sortIndex + 1000
+      newSortIndex = previousPost.sortIndex * 2
     } else {
       newSortIndex = Math.round((previousPost.sortIndex + nextPost.sortIndex) / 2)
     }
