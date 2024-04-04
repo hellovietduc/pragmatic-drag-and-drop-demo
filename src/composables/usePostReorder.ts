@@ -1,18 +1,20 @@
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { useDummyData, type Post } from '@/composables/useDummyData'
+import type { ItemData } from '@/composables/useElementDragAndDrop'
+import { getSortIndexBetweenItems } from '@/bits/reorder'
 
-type Data = { postId: string; sectionId: string } & any
+export type PostDragData = { postId: string; sectionId: string }
 
 export const usePostReorder = () => {
   const { postsBySectionId } = useDummyData()
 
-  const reorderPost = (source: Data, target: Data) => {
+  const reorderPost = (source: PostDragData & ItemData, target: PostDragData & ItemData) => {
     const sourcePostsArray = postsBySectionId.value[source.sectionId]
     const targetPostsArray = postsBySectionId.value[target.sectionId]
-    const closestEdgeOfTarget = extractClosestEdge(target)
 
     const sourceIndex = sourcePostsArray.findIndex((post) => post.id === source.postId)
     const targetIndex = targetPostsArray.findIndex((post) => post.id === target.postId)
+
     const isValidSource = sourceIndex >= 0 && sourceIndex < sourcePostsArray.length
     const isValidTarget = targetIndex >= 0 && targetIndex < targetPostsArray.length
 
@@ -20,28 +22,21 @@ export const usePostReorder = () => {
       return
     }
 
-    let previousPost: Post
+    const closestEdgeOfTarget = extractClosestEdge(target)
+    if (!closestEdgeOfTarget) return
+
+    let prevPost: Post
     let nextPost: Post
     if (closestEdgeOfTarget === 'top') {
-      previousPost = targetPostsArray[targetIndex - 1]
+      prevPost = targetPostsArray[targetIndex - 1]
       nextPost = targetPostsArray[targetIndex]
     } else {
-      previousPost = targetPostsArray[targetIndex]
+      prevPost = targetPostsArray[targetIndex]
       nextPost = targetPostsArray[targetIndex + 1]
     }
 
-    if (!previousPost && !nextPost) {
-      return
-    }
-
-    let newSortIndex: number
-    if (!previousPost) {
-      newSortIndex = nextPost.sortIndex / 2
-    } else if (!nextPost) {
-      newSortIndex = previousPost.sortIndex * 2
-    } else {
-      newSortIndex = Math.round((previousPost.sortIndex + nextPost.sortIndex) / 2)
-    }
+    const newSortIndex = getSortIndexBetweenItems(prevPost, nextPost)
+    if (!newSortIndex) return
 
     const targetPost = sourcePostsArray[sourceIndex]
     targetPost.sortIndex = newSortIndex

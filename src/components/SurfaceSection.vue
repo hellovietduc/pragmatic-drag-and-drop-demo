@@ -5,14 +5,15 @@ import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import { useElementDragAndDrop, type OnDropPayload } from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
-import { usePostReorder } from '@/composables/usePostReorder'
+import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
+import type { SectionDragData } from '@/composables/useSectionReorder'
 
 const props = defineProps<{
   id: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload): void
+  (e: 'reorder', payload: OnDropPayload<SectionDragData>): void
 }>()
 
 const { sectionById, postsBySectionId } = useDummyData()
@@ -21,12 +22,13 @@ const section = computed(() => sectionById.value[props.id])
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
+const itemData: SectionDragData = { sectionId: props.id }
 
 const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
   elementRef: rootEl,
   type: 'section',
   axis: 'horizontal',
-  itemData: { sectionId: props.id },
+  itemData,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
   dragPreviewComponentProps: { id: props.id },
@@ -38,8 +40,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
 
 const { reorderPost } = usePostReorder()
 
-const handlePostReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDropPayload) => {
-  console.log('🚀 dragged post', sourceData, 'to', targetData, 'near the', closestEdgeOfTarget)
+const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
   reorderPost(sourceData, targetData)
 }
 </script>

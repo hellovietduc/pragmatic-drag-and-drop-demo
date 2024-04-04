@@ -2,14 +2,13 @@
 import { type OnDropPayload } from '@/composables/useElementDragAndDrop'
 import SurfaceSection from '@/components/SurfaceSection.vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useSectionReorder } from '@/composables/useSectionReorder'
+import { useSectionReorder, type SectionDragData } from '@/composables/useSectionReorder'
 
 const { sortedSections } = useDummyData()
 
 const { reorderSection } = useSectionReorder()
 
-const handleSectionReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDropPayload) => {
-  console.log('🚀 dragged section', sourceData, 'to', targetData, 'near the', closestEdgeOfTarget)
+const handleSectionReorder = ({ sourceData, targetData }: OnDropPayload<SectionDragData>) => {
   reorderSection(sourceData, targetData)
 }
 </script>

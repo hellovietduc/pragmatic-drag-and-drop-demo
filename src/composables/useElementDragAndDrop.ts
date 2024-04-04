@@ -28,16 +28,16 @@ import {
 type DragData = Record<string | symbol, unknown>
 
 /** Symbol to identify events made by Pragmatic DnD. */
-const itemKey = Symbol('item')
+const ITEM_KEY = Symbol('item')
 
 type ItemData = DragData & {
-  [itemKey]: true
+  [ITEM_KEY]: true
   type: string
   instanceId: symbol
 }
 
 const isItemData = (data: DragData): data is ItemData => {
-  return data[itemKey] === true
+  return data[ITEM_KEY] === true
 }
 
 const getItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData => {
@@ -69,10 +69,9 @@ const renderDragPreview = <TProps extends ComponentProps>(
 
 const noOp = () => {}
 
-type OnDropPayload = {
-  sourceData: ItemData
-  targetData: ItemData
-  closestEdgeOfTarget: Edge
+type OnDropPayload<TItemData extends DragData = DragData> = {
+  sourceData: ItemData & TItemData
+  targetData: ItemData & TItemData
 }
 
 export const useElementDragAndDrop = <
@@ -126,7 +125,7 @@ export const useElementDragAndDrop = <
   /**
    * Event handler for when a draggable element is dropped on a drop target.
    */
-  onDrop?: (payload: OnDropPayload) => void
+  onDrop?: (payload: OnDropPayload<TItemData>) => void
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
   const dragIndicatorEdge = ref<Edge | null>(null)
@@ -134,7 +133,7 @@ export const useElementDragAndDrop = <
   /** Symbol to identify the current draggable instance. */
   const instanceId = Symbol('instanceId')
 
-  const data: ItemData = { ...itemData, [itemKey]: true, type, instanceId }
+  const data: ItemData = { ...itemData, [ITEM_KEY]: true, type, instanceId }
 
   /**
    * Makes the element draggable.
@@ -211,16 +210,14 @@ export const useElementDragAndDrop = <
           return
         }
 
-        const sourceData = getItemData(source)
-        const targetData = getItemData(target)
+        const sourceData = getItemData(source) as ItemData & TItemData
+        const targetData = getItemData(target) as ItemData & TItemData
 
         if (!isItemData(sourceData) || !isItemData(targetData)) {
           return
         }
 
-        const closestEdgeOfTarget = extractClosestEdge(targetData)
-
-        if (closestEdgeOfTarget) onDrop?.({ sourceData, targetData, closestEdgeOfTarget })
+        onDrop?.({ sourceData, targetData })
       }
     })
   }
@@ -251,4 +248,4 @@ export const useElementDragAndDrop = <
   }
 }
 
-export type { ItemState, OnDropPayload }
+export type { DragData, ItemState, ItemData, OnDropPayload }

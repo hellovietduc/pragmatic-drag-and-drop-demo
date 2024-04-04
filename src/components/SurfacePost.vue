@@ -4,6 +4,7 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import { type OnDropPayload, useElementDragAndDrop } from '@/composables/useElementDragAndDrop'
+import type { PostDragData } from '@/composables/usePostReorder'
 
 const props = defineProps<{
   id: string
@@ -11,14 +12,14 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload): void
+  (e: 'reorder', payload: OnDropPayload<PostDragData>): void
 }>()
 
 const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
 const rootEl = ref<HTMLElement>()
-const itemData = { postId: props.id, sectionId: props.sectionId } as const
+const itemData: PostDragData = { postId: props.id, sectionId: props.sectionId }
 
 const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
   elementRef: rootEl,
