@@ -3,7 +3,7 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useDragAndDrop, type OnDropPayload } from '@/composables/useDragAndDrop'
+import { useElementDragAndDrop, type OnDropPayload } from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 
 const props = defineProps<{
@@ -21,7 +21,7 @@ const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
 
-const { itemState, dragIndicatorEdge } = useDragAndDrop({
+const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
   elementRef: rootEl,
   type: 'section',
   axis: 'horizontal',

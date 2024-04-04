@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDummyData } from '@/composables/useDummyData'
 import SurfaceSection from '@/components/SurfaceSection.vue'
-import { type OnDropPayload } from '@/composables/useDragAndDrop'
+import { type OnDropPayload } from '@/composables/useElementDragAndDrop'
 
 const { sectionsCount, postsPerSectionCount, sections } = useDummyData()
 

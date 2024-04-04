@@ -75,7 +75,7 @@ export type OnDropPayload = {
   closestEdgeOfTarget: Edge
 }
 
-export const useDragAndDrop = <
+export const useElementDragAndDrop = <
   TItemData extends DragData,
   TDragPreviewComponentProps extends ComponentProps = ComponentProps
 >({

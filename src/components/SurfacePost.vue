@@ -3,7 +3,7 @@ import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { type OnDropPayload, useDragAndDrop } from '@/composables/useDragAndDrop'
+import { type OnDropPayload, useElementDragAndDrop } from '@/composables/useElementDragAndDrop'
 
 const props = defineProps<{
   id: string
@@ -20,7 +20,7 @@ const post = computed(() => postById.value[props.id])
 const rootEl = ref<HTMLElement>()
 const itemData = { postId: props.id, sectionId: props.sectionId } as const
 
-const { itemState, dragIndicatorEdge } = useDragAndDrop({
+const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
   elementRef: rootEl,
   type: 'post',
   axis: 'vertical',
