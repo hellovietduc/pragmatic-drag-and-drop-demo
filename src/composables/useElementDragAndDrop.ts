@@ -203,6 +203,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
    */
   onDrop?: (payload: OnDropPayload<TItemData>) => void
 }) => {
+  const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
   const allowedEdgesByType = keyBy(
@@ -241,12 +242,15 @@ const useDropTargetForElements = <TItemData extends DragData>({
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       onDrag: ({ self }) => {
+        isDraggingOver.value = true
         dragIndicatorEdge.value = extractClosestEdge(self.data)
       },
       onDragLeave() {
+        isDraggingOver.value = false
         dragIndicatorEdge.value = null
       },
       onDrop({ self, source, location }) {
+        isDraggingOver.value = false
         dragIndicatorEdge.value = null
 
         // If there are nested drop targets all of them will have
@@ -281,6 +285,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
   })
 
   return {
+    isDraggingOver,
     dragIndicatorEdge
   }
 }

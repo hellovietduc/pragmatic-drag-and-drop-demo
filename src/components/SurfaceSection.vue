@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DragOverlay from '@/components/DragOverlay.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
@@ -45,7 +46,9 @@ const { itemState } = useDraggableElement({
   dragPreviewComponentProps: { id: props.id }
 })
 
-const { dragIndicatorEdge } = useDropTargetForElements<SectionDragData | PostDragData>({
+const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
+  SectionDragData | PostDragData
+>({
   elementRef: rootEl,
   types: [
     {
@@ -80,10 +83,13 @@ const xDragIndicator = computed(
   <div class="relative h-full">
     <section
       ref="rootEl"
-      :class="['flex', 'flex-col', 'w-[246px]', 'h-full', isDragging && 'opacity-40']"
+      :class="['relative', 'flex', 'flex-col', 'w-[246px]', 'h-full', isDragging && 'opacity-40']"
     >
       <!-- Section title -->
-      <h1 ref="dragHandle" class="rounded-lg mx-3.5 px-3 py-2 bg-sky-300 font-semibold select-none">
+      <h1
+        ref="dragHandle"
+        class="z-10 rounded-lg mx-3.5 px-3 py-2 bg-sky-300 font-semibold select-none"
+      >
         {{ section.title }}
       </h1>
 
@@ -101,22 +107,23 @@ const xDragIndicator = computed(
       </template>
     </DynamicScroller> -->
 
-      <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-scroll pt-4 ps-3.5">
+      <div ref="scrollContainer" class="grow flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
         <SurfacePost
           v-for="post in postsBySectionId[section.id]"
           :key="post.id"
           :id="post.id"
           :section-id="id"
-          class="last:mb-4"
+          class="z-10 last:mb-4"
           @reorder="handlePostReorder"
         />
       </div>
+      <DragOverlay v-if="isDraggingOver && !xDragIndicator" class="absolute inset-x-0 -inset-y-2" />
     </section>
     <DragIndicator
       v-if="xDragIndicator"
       :orientation="DragIndicatorOrientation.Vertical"
       :class="[
-        '!absolute',
+        'absolute',
         'inset-y-0',
         {
           'start-0': dragIndicatorEdge === 'left',

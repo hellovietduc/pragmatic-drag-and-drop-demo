@@ -79,7 +79,7 @@ const xDragIndicator = computed(
       v-if="xDragIndicator"
       :orientation="DragIndicatorOrientation.Horizontal"
       :class="[
-        '!absolute',
+        'absolute',
         'start-0',
         'end-1.5',
         {
