@@ -1,3 +1,5 @@
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element'
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine'
 import {
   draggable,
   dropTargetForElements,
@@ -34,6 +36,8 @@ export type ItemState =
 const IDLE_STATE: ItemState = { type: 'idle' }
 const DRAGGING_STATE: ItemState = { type: 'dragging' }
 
+const noOp = () => {}
+
 const renderDragPreview = <TProps extends ComponentProps>(
   container: HTMLElement,
   component: Component,
@@ -56,7 +60,8 @@ export const useDragAndDrop = <
   dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
-  canDrop
+  canDrop,
+  scrollContainerElementRef
 }: {
   elementRef: Ref<HTMLElement | undefined>
   itemData: TItemData
@@ -65,6 +70,7 @@ export const useDragAndDrop = <
   dragPreviewComponent?: Component<TDragPreviewComponentProps>
   dragPreviewComponentProps?: TDragPreviewComponentProps
   canDrop?: (data: DragData) => boolean
+  scrollContainerElementRef?: Ref<HTMLElement | undefined>
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
   const dragIndicatorEdge = ref<Edge | null>(null)
@@ -73,16 +79,15 @@ export const useDragAndDrop = <
     return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
   })
 
-  let cleanUpDraggable: () => void | undefined
-  let cleanUpDropTarget: () => void | undefined
+  let cleanUp: () => void
 
   const getItemData = (source: ElementDragPayload): TItemData => {
     return source.data as TItemData
   }
 
   const makeElementDraggable = () => {
-    if (!elementRef.value) return
-    cleanUpDraggable = draggable({
+    if (!elementRef.value) return noOp
+    return draggable({
       element: elementRef.value,
       dragHandle: dragHandleElementRef?.value,
       getInitialData: () => {
@@ -114,49 +119,54 @@ export const useDragAndDrop = <
   }
 
   const setupDropTarget = () => {
-    if (!elementRef.value) return
-    cleanUpDropTarget = dropTargetForElements({
-      element: elementRef.value,
-      getData: ({ source, input }) => {
-        if (!elementRef.value) return source.data
-        return attachClosestEdge(itemData, {
-          element: elementRef.value,
-          input,
-          allowedEdges: allowedEdges.value
-        })
-      },
-      canDrop: ({ source }) => {
-        return canDrop?.(getItemData(source)) ?? true
-      },
-      getIsSticky: () => true,
-      onDrag: ({ self, source }) => {
-        const isSource = source.element === elementRef.value
-        if (isSource) {
+    if (!elementRef.value) return noOp
+    return combine(
+      dropTargetForElements({
+        element: elementRef.value,
+        getData: ({ source, input }) => {
+          if (!elementRef.value) return source.data
+          return attachClosestEdge(itemData, {
+            element: elementRef.value,
+            input,
+            allowedEdges: allowedEdges.value
+          })
+        },
+        canDrop: ({ source }) => {
+          return canDrop?.(getItemData(source)) ?? true
+        },
+        getIsSticky: () => true,
+        onDrag: ({ self, source }) => {
+          const isSource = source.element === elementRef.value
+          if (isSource) {
+            dragIndicatorEdge.value = null
+            return
+          }
+          const closestEdge = extractClosestEdge(self.data)
+          dragIndicatorEdge.value = closestEdge
+        },
+        onDragLeave() {
           dragIndicatorEdge.value = null
-          return
+        },
+        onDrop() {
+          console.log(`🚀 drop to target`, itemData)
+          itemState.value = IDLE_STATE
+          dragIndicatorEdge.value = null
         }
-        const closestEdge = extractClosestEdge(self.data)
-        dragIndicatorEdge.value = closestEdge
-      },
-      onDragLeave() {
-        dragIndicatorEdge.value = null
-      },
-      onDrop() {
-        console.log(`🚀 drop to target`, itemData)
-        itemState.value = IDLE_STATE
-        dragIndicatorEdge.value = null
-      }
-    })
+      }),
+      scrollContainerElementRef?.value
+        ? autoScrollForElements({
+            element: scrollContainerElementRef.value
+          })
+        : noOp
+    )
   }
 
   onMounted(() => {
-    makeElementDraggable()
-    setupDropTarget()
+    cleanUp = combine(makeElementDraggable(), setupDropTarget())
   })
 
   onBeforeUnmount(() => {
-    cleanUpDraggable?.()
-    cleanUpDropTarget?.()
+    cleanUp?.()
   })
 
   return {

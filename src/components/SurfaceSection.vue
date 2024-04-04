@@ -15,6 +15,7 @@ const section = computed(() => sectionById.value[props.id])
 
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
+const scrollContainer = ref<HTMLElement>()
 
 const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
@@ -23,7 +24,8 @@ const { itemState, dragIndicatorEdge } = useDragAndDrop({
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
   dragPreviewComponentProps: { id: props.id },
-  canDrop: ({ type }) => type === 'section'
+  canDrop: ({ type }) => type === 'section',
+  scrollContainerElementRef: scrollContainer
 })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
@@ -32,7 +34,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
 <template>
   <section
     ref="rootEl"
-    :class="['relative', 'flex', 'flex-col', 'gap-4', isDragging && 'opacity-40']"
+    :class="['relative', 'flex', 'flex-col', 'gap-4', 'h-screen', isDragging && 'opacity-40']"
   >
     <!-- Section title -->
     <h1 ref="dragHandle" class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">
@@ -40,7 +42,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
     </h1>
 
     <!-- Post list -->
-    <div class="flex flex-col">
+    <div ref="scrollContainer" class="flex flex-col overflow-scroll">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
