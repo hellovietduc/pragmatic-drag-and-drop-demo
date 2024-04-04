@@ -36,7 +36,7 @@ const handleSectionReorder = ({ sourceData, targetData, closestEdgeOfTarget }: O
         />
       </div>
     </div>
-    <div class="grow flex justify-center items-center gap-2.5 overflow-hidden p-2">
+    <div class="grow flex justify-center items-center gap-2.5 overflow-hidden w-screen p-2">
       <SurfaceSection
         v-for="section in sections"
         :key="section.id"

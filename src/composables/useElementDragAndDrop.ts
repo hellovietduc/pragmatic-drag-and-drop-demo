@@ -197,8 +197,7 @@ export const useElementDragAndDrop = <
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       onDrag: ({ self }) => {
-        const closestEdge = extractClosestEdge(self.data)
-        dragIndicatorEdge.value = closestEdge
+        dragIndicatorEdge.value = extractClosestEdge(self.data)
       },
       onDragLeave() {
         dragIndicatorEdge.value = null

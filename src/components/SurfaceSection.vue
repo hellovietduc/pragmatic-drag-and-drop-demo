@@ -43,7 +43,7 @@ const handlePostReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDr
 <template>
   <section
     ref="rootEl"
-    :class="['relative', 'flex', 'flex-col', 'gap-4', 'h-full', isDragging && 'opacity-40']"
+    :class="['relative', 'flex', 'flex-col', 'h-full', isDragging && 'opacity-40']"
   >
     <!-- Section title -->
     <h1 ref="dragHandle" class="rounded-lg mx-3.5 px-3 py-2 bg-sky-300 font-semibold select-none">
@@ -51,7 +51,7 @@ const handlePostReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDr
     </h1>
 
     <!-- Post list -->
-    <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-scroll ps-3.5">
+    <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-scroll pt-4 ps-3.5">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
