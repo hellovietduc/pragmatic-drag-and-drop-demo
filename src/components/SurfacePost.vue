@@ -34,30 +34,32 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
 </script>
 
 <template>
-  <article
-    ref="rootEl"
-    :class="[
-      'relative',
-      'flex',
-      'flex-col',
-      'gap-2',
-      'rounded-xl',
-      'shadow-lg',
-      'p-2',
-      'bg-stone-100',
-      isDragging && 'opacity-40'
-    ]"
-  >
-    <h2 class="select-none">{{ post.subject }}</h2>
-    <img
-      :src="post.attachment"
-      alt="Attachment"
-      class="rounded-lg overflow-hidden"
-      :width="200"
-      :height="200"
-      :style="{ width: `200px`, height: `200px` }"
-      draggable="false"
-    />
+  <div class="relative w-max">
+    <article
+      ref="rootEl"
+      :class="[
+        'flex',
+        'flex-col',
+        'gap-2',
+        'rounded-xl',
+        'shadow-lg',
+        'w-max',
+        'p-2',
+        'bg-stone-100',
+        isDragging && 'opacity-40'
+      ]"
+    >
+      <h2 class="select-none">{{ post.subject }}</h2>
+      <img
+        :src="post.attachment"
+        alt="Attachment"
+        class="rounded-lg overflow-hidden"
+        :width="200"
+        :height="200"
+        :style="{ width: `200px`, height: `200px` }"
+        draggable="false"
+      />
+    </article>
     <DragIndicator
       v-if="dragIndicatorEdge"
       :orientation="DragIndicatorOrientation.Horizontal"
@@ -71,5 +73,5 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
         }
       ]"
     />
-  </article>
+  </div>
 </template>

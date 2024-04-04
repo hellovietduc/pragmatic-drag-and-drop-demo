@@ -38,7 +38,7 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number) =
 
 export const useDummyData = createSharedComposable(() => {
   const sectionsCount = ref(5)
-  const postsPerSectionCount = ref(7)
+  const postsPerSectionCount = ref(20)
 
   const sections = computed(() => generateSections(sectionsCount.value))
   const posts = computed(() =>
