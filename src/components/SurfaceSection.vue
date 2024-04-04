@@ -4,7 +4,8 @@ import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import {
-  useElementDragAndDrop,
+  useDraggableElement,
+  useDropTargetForElements,
   useDragAndDropAutoScroll,
   type OnDropPayload
 } from '@/composables/useElementDragAndDrop'
@@ -28,20 +29,26 @@ const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
 const itemData: SectionDragData = { sectionId: props.id }
 
-const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
+const { itemState } = useDraggableElement({
   elementRef: rootEl,
   type: 'section',
-  axis: 'horizontal',
   itemData,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
-  dragPreviewComponentProps: { id: props.id },
+  dragPreviewComponentProps: { id: props.id }
+})
+
+const { dragIndicatorEdge } = useDropTargetForElements({
+  elementRef: rootEl,
+  type: 'section',
+  itemData,
+  axis: 'horizontal',
   onDrop: (payload) => emit('reorder', payload)
 })
 
-const isDragging = computed(() => itemState.value.type === 'dragging')
-
 useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer })
+
+const isDragging = computed(() => itemState.value.type === 'dragging')
 
 const { reorderPost } = usePostReorder()
 

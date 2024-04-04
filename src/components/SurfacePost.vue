@@ -3,7 +3,11 @@ import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { type OnDropPayload, useElementDragAndDrop } from '@/composables/useElementDragAndDrop'
+import {
+  type OnDropPayload,
+  useDraggableElement,
+  useDropTargetForElements
+} from '@/composables/useElementDragAndDrop'
 import type { PostDragData } from '@/composables/usePostReorder'
 
 const props = defineProps<{
@@ -21,13 +25,19 @@ const post = computed(() => postById.value[props.id])
 const rootEl = ref<HTMLElement>()
 const itemData: PostDragData = { postId: props.id, sectionId: props.sectionId }
 
-const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
+const { itemState } = useDraggableElement({
   elementRef: rootEl,
   type: 'post',
-  axis: 'vertical',
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
-  dragPreviewComponentProps: { id: props.id },
+  dragPreviewComponentProps: { id: props.id }
+})
+
+const { dragIndicatorEdge } = useDropTargetForElements({
+  elementRef: rootEl,
+  type: 'post',
+  itemData,
+  axis: 'vertical',
   onDrop: (payload) => emit('reorder', payload)
 })
 

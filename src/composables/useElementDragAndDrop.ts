@@ -1,5 +1,4 @@
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element'
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine'
 import {
   draggable,
   dropTargetForElements,
@@ -33,15 +32,18 @@ const ITEM_KEY = Symbol('item')
 type ItemData = DragData & {
   [ITEM_KEY]: true
   type: string
-  instanceId: symbol
 }
 
 const isItemData = (data: DragData): data is ItemData => {
   return data[ITEM_KEY] === true
 }
 
-const getItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData => {
+const extractItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData => {
   return payload.data as ItemData
+}
+
+const makeItemData = <TItemData>(itemData: TItemData, type: ItemData['type']): ItemData => {
+  return { ...itemData, [ITEM_KEY]: true, type }
 }
 
 type ItemState =
@@ -69,23 +71,24 @@ const renderDragPreview = <TProps extends ComponentProps>(
 
 const noOp = () => {}
 
-type OnDropPayload<TItemData extends DragData = DragData> = {
+type OnDropPayload<TItemData extends DragData> = {
   sourceData: ItemData & TItemData
   targetData: ItemData & TItemData
 }
 
-export const useElementDragAndDrop = <
+/**
+ * Makes an element draggable.
+ */
+const useDraggableElement = <
   TItemData extends DragData,
-  TDragPreviewComponentProps extends ComponentProps = ComponentProps
+  TDragPreviewComponentProps extends ComponentProps
 >({
   elementRef,
   type,
-  axis,
   itemData,
   dragHandleElementRef,
   dragPreviewComponent,
-  dragPreviewComponentProps,
-  onDrop
+  dragPreviewComponentProps
 }: {
   /**
    * Element to be made draggable.
@@ -96,10 +99,6 @@ export const useElementDragAndDrop = <
    */
   type: ItemData['type']
   /**
-   * Drag direction.
-   */
-  axis: 'vertical' | 'horizontal'
-  /**
    * Data to attach with this draggable element.
    */
   itemData: TItemData
@@ -109,7 +108,7 @@ export const useElementDragAndDrop = <
    */
   dragHandleElementRef?: Ref<HTMLElement | undefined>
   /**
-   * Element to be used as a drag preview.
+   * Component to be used as a drag preview.
    * @default elementRef
    */
   dragPreviewComponent?: Component<TDragPreviewComponentProps>
@@ -117,22 +116,11 @@ export const useElementDragAndDrop = <
    * Props to be passed to the drag preview component.
    */
   dragPreviewComponentProps?: TDragPreviewComponentProps
-  /**
-   * Event handler for when a draggable element is dropped on a drop target.
-   */
-  onDrop?: (payload: OnDropPayload<TItemData>) => void
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
-  const dragIndicatorEdge = ref<Edge | null>(null)
 
-  /** Symbol to identify the current draggable instance. */
-  const instanceId = Symbol('instanceId')
+  const data = makeItemData(itemData, type)
 
-  const data: ItemData = { ...itemData, [ITEM_KEY]: true, type, instanceId }
-
-  /**
-   * Makes the element draggable.
-   */
   const makeElementDraggable = () => {
     if (!elementRef.value) return noOp
     return draggable({
@@ -165,13 +153,60 @@ export const useElementDragAndDrop = <
     })
   }
 
+  let cleanUp: CleanupFn
+
+  onMounted(() => {
+    cleanUp = makeElementDraggable()
+  })
+
+  onBeforeUnmount(() => {
+    cleanUp?.()
+  })
+
+  return {
+    itemState
+  }
+}
+
+/**
+ * Makes an element a drop target for other draggable elements.
+ */
+const useDropTargetForElements = <TItemData extends DragData>({
+  elementRef,
+  type,
+  axis,
+  itemData,
+  onDrop
+}: {
+  /**
+   * Element to be made drop target.
+   */
+  elementRef: Ref<HTMLElement | undefined>
+  /**
+   * Used to differentiate multiple types of drags on a page.
+   */
+  type: ItemData['type']
+  /**
+   * Drag direction.
+   */
+  axis: 'vertical' | 'horizontal'
+  /**
+   * Data to attach with this drop target.
+   */
+  itemData: TItemData
+  /**
+   * Event handler for when a draggable element is dropped on a drop target.
+   */
+  onDrop?: (payload: OnDropPayload<TItemData>) => void
+}) => {
+  const dragIndicatorEdge = ref<Edge | null>(null)
+
   const allowedEdges = computed<Edge[]>(() => {
     return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
   })
 
-  /**
-   * Also makes this element a drop target for other draggable elements.
-   */
+  const data = makeItemData(itemData, type)
+
   const setUpDropTarget = () => {
     if (!elementRef.value) return noOp
     return dropTargetForElements({
@@ -187,7 +222,7 @@ export const useElementDragAndDrop = <
       },
       canDrop: ({ source }) => {
         // Only allow dropping elements of the same type.
-        return getItemData(source).type === type
+        return extractItemData(source).type === type
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       onDrag: ({ self }) => {
@@ -197,7 +232,6 @@ export const useElementDragAndDrop = <
         dragIndicatorEdge.value = null
       },
       onDrop({ source, location }) {
-        itemState.value = IDLE_STATE
         dragIndicatorEdge.value = null
 
         const target = location.current.dropTargets[0]
@@ -205,8 +239,8 @@ export const useElementDragAndDrop = <
           return
         }
 
-        const sourceData = getItemData(source) as ItemData & TItemData
-        const targetData = getItemData(target) as ItemData & TItemData
+        const sourceData = extractItemData(source) as ItemData & TItemData
+        const targetData = extractItemData(target) as ItemData & TItemData
 
         if (!isItemData(sourceData) || !isItemData(targetData)) {
           return
@@ -220,7 +254,7 @@ export const useElementDragAndDrop = <
   let cleanUp: CleanupFn
 
   onMounted(() => {
-    cleanUp = combine(makeElementDraggable(), setUpDropTarget())
+    cleanUp = setUpDropTarget()
   })
 
   onBeforeUnmount(() => {
@@ -228,7 +262,6 @@ export const useElementDragAndDrop = <
   })
 
   return {
-    itemState,
     dragIndicatorEdge
   }
 }
@@ -262,5 +295,5 @@ const useDragAndDropAutoScroll = ({
   })
 }
 
-export { useDragAndDropAutoScroll }
+export { useDraggableElement, useDropTargetForElements, useDragAndDropAutoScroll }
 export type { DragData, ItemState, ItemData, OnDropPayload }
