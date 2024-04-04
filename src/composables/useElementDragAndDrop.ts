@@ -303,20 +303,28 @@ const useDropTargetForElements = <TItemData extends DragData>({
 }
 
 /**
- * Enables auto-scrolling for the scroll container in a draggable list.
+ * Enables auto scrolling for the scroll container in a draggable list.
  */
 const useDragAndDropAutoScroll = ({
-  scrollContainerElementRef
+  scrollContainerElementRef,
+  type
 }: {
   /**
-   * Element to enable auto-scrolling for.
+   * Element to enable auto scrolling for.
    */
   scrollContainerElementRef: Ref<HTMLElement | undefined>
+  /**
+   * Only auto scroll when dragging an item of this type.
+   */
+  type: ItemData['type']
 }) => {
   const enableAutoScroll = () => {
     if (!scrollContainerElementRef.value) return noOp
     return autoScrollForElements({
-      element: scrollContainerElementRef.value
+      element: scrollContainerElementRef.value,
+      canScroll: ({ source }) => {
+        return extractItemData(source).type === type
+      }
     })
   }
 

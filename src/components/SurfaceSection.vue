@@ -71,7 +71,7 @@ const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
   }
 })
 
-useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer })
+useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer, type: 'post' })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
 const xDragIndicator = computed(
