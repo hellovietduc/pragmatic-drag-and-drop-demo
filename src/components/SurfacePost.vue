@@ -3,6 +3,7 @@ import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
+import { useDraggingState } from '@/composables/useDraggingState'
 import {
   isVerticalEdge,
   type OnDropPayload,
@@ -23,6 +24,8 @@ const emit = defineEmits<{
 const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
+const { isDraggingPost } = useDraggingState()
+
 const rootEl = ref<HTMLElement>()
 const itemData: PostDragData = { postId: props.id, sectionId: props.sectionId }
 
@@ -31,26 +34,31 @@ const { itemState } = useDraggableElement({
   type: 'post',
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
-  dragPreviewComponentProps: { id: props.id }
+  dragPreviewComponentProps: { id: props.id },
+  onDragStart: () => (isDraggingPost.value = true),
+  onDrop: () => (isDraggingPost.value = false)
 })
 
 const { dragIndicatorEdge } = useDropTargetForElements({
   elementRef: rootEl,
   types: [{ type: 'post', axis: 'vertical' }],
   itemData,
-  onDrop: (payload) => emit('reorder', payload)
+  onDrop: (payload) => {
+    isDraggingPost.value = false
+    emit('reorder', payload)
+  }
 })
 
-const isDragging = computed(() => itemState.value.type === 'dragging')
+const isDraggingThisPost = computed(() => itemState.value.type === 'dragging')
 const xDragIndicator = computed(
   () => dragIndicatorEdge.value && isVerticalEdge(dragIndicatorEdge.value)
 )
 </script>
 
 <template>
-  <div class="relative w-max">
+  <div ref="rootEl" class="relative w-max">
     <article
-      ref="rootEl"
+      v-show="!isDraggingPost"
       :class="[
         'flex',
         'flex-col',
@@ -60,7 +68,7 @@ const xDragIndicator = computed(
         'w-max',
         'p-2',
         'bg-stone-100',
-        isDragging && 'opacity-40'
+        isDraggingThisPost && 'opacity-40'
       ]"
     >
       <h2 class="select-none">{{ post.subject }}</h2>
@@ -75,6 +83,11 @@ const xDragIndicator = computed(
         draggable="false"
       />
     </article>
+    <SurfacePostDragPreview
+      v-show="isDraggingPost"
+      :id="id"
+      :class="isDraggingThisPost && 'opacity-40'"
+    />
     <DragIndicator
       v-if="xDragIndicator"
       :orientation="DragIndicatorOrientation.Horizontal"

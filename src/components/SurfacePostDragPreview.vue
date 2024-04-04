@@ -17,7 +17,7 @@ const post = computed(() => postById.value[props.id])
       'relative',
       'flex',
       'justify-between',
-      'w-64',
+      'w-[216px]',
       'rounded-xl',
       'shadow-lg',
       'p-2',

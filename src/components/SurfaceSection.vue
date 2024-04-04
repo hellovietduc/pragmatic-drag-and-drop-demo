@@ -107,7 +107,7 @@ const xDragIndicator = computed(
       </template>
     </DynamicScroller> -->
 
-      <div ref="scrollContainer" class="grow flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
+      <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
         <SurfacePost
           v-for="post in postsBySectionId[section.id]"
           :key="post.id"

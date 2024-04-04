@@ -87,7 +87,9 @@ const useDraggableElement = <
   itemData,
   dragHandleElementRef,
   dragPreviewComponent,
-  dragPreviewComponentProps
+  dragPreviewComponentProps,
+  onDragStart,
+  onDrop
 }: {
   /**
    * Element to be made draggable.
@@ -115,6 +117,14 @@ const useDraggableElement = <
    * Props to be passed to the drag preview component.
    */
   dragPreviewComponentProps?: TDragPreviewComponentProps
+  /**
+   * A drag operation has started.
+   */
+  onDragStart?: () => void
+  /**
+   * The current element has been dropped.
+   */
+  onDrop?: () => void
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
 
@@ -143,11 +153,13 @@ const useDraggableElement = <
       },
       onDragStart: () => {
         itemState.value = DRAGGING_STATE
+        onDragStart?.()
       },
       onDrop: () => {
         // `onDrop` may not fired if the element is destroyed in a virtualized list.
         // DO NOT handle reordering logic here.
         itemState.value = IDLE_STATE
+        onDrop?.()
       }
     })
   }
@@ -199,7 +211,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
    */
   ignoresInnerDrops?: boolean
   /**
-   * Event handler for when a draggable element is dropped on a drop target.
+   * Finished a drag and drop operation.
    */
   onDrop?: (payload: OnDropPayload<TItemData>) => void
 }) => {
