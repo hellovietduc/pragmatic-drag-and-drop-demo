@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { flashElement } from '@/bits/flash'
 import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
@@ -11,6 +12,7 @@ import {
   useDropTargetForElements
 } from '@/composables/useElementDragAndDrop'
 import type { PostDragData } from '@/composables/usePostReorder'
+import { raf } from '@/bits/raf'
 
 const props = defineProps<{
   id: string
@@ -46,6 +48,15 @@ const { dragIndicatorEdge } = useDropTargetForElements({
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('reorder', payload)
+
+    raf(async () => {
+      const movedElement = document.querySelector<HTMLElement>(
+        `[data-id="${payload.sourceData.postId}"]`
+      )
+      if (!movedElement) return
+      movedElement.scrollIntoView()
+      flashElement(movedElement, 'rgba(148,102,232,0.2)')
+    })
   }
 })
 
@@ -70,6 +81,7 @@ const xDragIndicator = computed(
         'bg-stone-100',
         isDraggingThisPost && 'opacity-40'
       ]"
+      :data-id="id"
     >
       <h2 class="select-none">{{ post.subject }}</h2>
       <h3 class="select-none text-sm">{{ post.sortIndex }}</h3>
