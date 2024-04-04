@@ -16,7 +16,7 @@ const section = computed(() => sectionById.value[props.id])
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 
-const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
+const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
   itemData: { type: 'section', sectionId: props.id },
   dragPreviewComponent: SurfaceSectionDragPreview,
@@ -26,13 +26,13 @@ const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
   canDrop: ({ type }) => type === 'section'
 })
 
-const draggingSectionId = computed(() => draggingItemData.value?.sectionId)
+const isDragging = computed(() => itemState.value.type === 'dragging')
 </script>
 
 <template>
   <section
     ref="rootEl"
-    :class="['relative', 'flex', 'flex-col', 'gap-4', draggingSectionId === id && 'opacity-50']"
+    :class="['relative', 'flex', 'flex-col', 'gap-4', isDragging && 'opacity-40']"
   >
     <!-- Section title -->
     <h1 ref="dragHandle" class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">

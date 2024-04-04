@@ -21,6 +21,15 @@ import {
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 
+export type ItemState =
+  | { type: 'idle' }
+  | { type: 'preview'; container: HTMLElement }
+  | { type: 'dragging' }
+  | { type: 'is-over'; closestEdge: Edge | null }
+
+const IDLE_STATE: ItemState = { type: 'idle' }
+const DRAGGING_STATE: ItemState = { type: 'dragging' }
+
 const renderDragPreview = (
   container: HTMLElement,
   component: Component,
@@ -48,9 +57,9 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
   dragPreviewComponentProps: Record<string, unknown>
   dropTargetEdges: Edge[]
   dragHandleElementRef?: Ref<HTMLElement | undefined>
-  canDrop?: (data: TItemData) => boolean
+  canDrop?: (data: Record<string, unknown>) => boolean
 }) => {
-  const draggingItemData = ref<TItemData | null>(null) as Ref<TItemData | null>
+  const itemState = ref<ItemState>(IDLE_STATE)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
   let cleanUpDraggable: () => void | undefined
@@ -70,20 +79,20 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
       },
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
+          nativeSetDragImage,
           getOffset: centerUnderPointer,
           render: ({ container }) => {
             return renderDragPreview(container, dragPreviewComponent, dragPreviewComponentProps)
-          },
-          nativeSetDragImage
+          }
         })
       },
       onDragStart: ({ source }) => {
         console.log('🚀 drag start', source.data)
-        draggingItemData.value = getItemData(source)
+        itemState.value = DRAGGING_STATE
       },
       onDrop: ({ source }) => {
         console.log('🚀 drop', source.data)
-        draggingItemData.value = null
+        itemState.value = IDLE_STATE
       }
     })
   }
@@ -103,6 +112,7 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
       canDrop: ({ source }) => {
         return canDrop?.(getItemData(source)) ?? true
       },
+      getIsSticky: () => true,
       onDrag: ({ self, source }) => {
         const isSource = source.element === elementRef.value
         if (isSource) {
@@ -116,6 +126,8 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
         dragIndicatorEdge.value = null
       },
       onDrop() {
+        console.log(`🚀 drop to target`, itemData)
+        itemState.value = IDLE_STATE
         dragIndicatorEdge.value = null
       }
     })
@@ -132,7 +144,7 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
   })
 
   return {
-    draggingItemData,
+    itemState,
     dragIndicatorEdge
   }
 }

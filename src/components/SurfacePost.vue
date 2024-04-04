@@ -13,7 +13,7 @@ const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
 const rootEl = ref<HTMLElement>()
-const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
+const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
   itemData: { type: 'post', postId: props.id },
   dragPreviewComponent: SurfacePostDragPreview,
@@ -22,7 +22,7 @@ const { draggingItemData, dragIndicatorEdge } = useDragAndDrop({
   canDrop: ({ type }) => type === 'post'
 })
 
-const draggingPostId = computed(() => draggingItemData.value?.postId)
+const isDragging = computed(() => itemState.value.type === 'dragging')
 </script>
 
 <template>
@@ -37,7 +37,7 @@ const draggingPostId = computed(() => draggingItemData.value?.postId)
       'shadow-lg',
       'p-2',
       'bg-stone-100',
-      draggingPostId === id && 'opacity-50'
+      isDragging && 'opacity-40'
     ]"
   >
     <h2 class="select-none">{{ post.subject }}</h2>
