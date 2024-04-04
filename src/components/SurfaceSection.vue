@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import { useElementDragAndDrop, type OnDropPayload } from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
+import { usePostReorder } from '@/composables/usePostReorder'
 
 const props = defineProps<{
   id: string
@@ -35,8 +36,11 @@ const { itemState, dragIndicatorEdge } = useElementDragAndDrop({
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
 
+const { reorderPost } = usePostReorder()
+
 const handlePostReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDropPayload) => {
   console.log('🚀 dragged post', sourceData, 'to', targetData, 'near the', closestEdgeOfTarget)
+  reorderPost(sourceData, targetData)
 }
 </script>
 

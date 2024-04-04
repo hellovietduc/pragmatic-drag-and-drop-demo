@@ -50,6 +50,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
       ]"
     >
       <h2 class="select-none">{{ post.subject }}</h2>
+      <h3 class="select-none text-sm">{{ post.sortIndex }}</h3>
       <img
         :src="post.attachment"
         alt="Attachment"
