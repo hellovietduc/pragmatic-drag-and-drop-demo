@@ -37,17 +37,17 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
     :class="['relative', 'flex', 'flex-col', 'gap-4', 'h-full', isDragging && 'opacity-40']"
   >
     <!-- Section title -->
-    <h1 ref="dragHandle" class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">
+    <h1 ref="dragHandle" class="rounded-lg mx-3.5 px-3 py-2 bg-sky-300 font-semibold select-none">
       {{ section.title }}
     </h1>
 
     <!-- Post list -->
-    <div ref="scrollContainer" class="flex flex-col overflow-y-scroll">
+    <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-scroll ps-3.5">
       <SurfacePost
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
         :id="post.id"
-        class="my-2 first:mt-0 last:mb-0"
+        class="last:mb-4"
       />
     </div>
     <DragIndicator
@@ -57,9 +57,9 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
         '!absolute',
         'inset-y-0',
         {
-          '-start-2.5': dragIndicatorEdge === 'left',
-          '-end-2.5': dragIndicatorEdge === 'right'
-        }
+          'start-0': dragIndicatorEdge === 'left',
+          '-end-3': dragIndicatorEdge === 'right'
+        },
       ]"
     />
   </section>

@@ -7,7 +7,7 @@ const { sectionsCount, postsPerSectionCount, sections } = useDummyData()
 
 <template>
   <main
-    class="flex flex-col justify-center items-center gap-10 overflow-hidden h-screen pt-7 bg-gray-200"
+    class="flex flex-col justify-center items-center gap-8 overflow-hidden h-screen pt-7 bg-gray-200"
   >
     <div class="shrink-0 flex items-center gap-20">
       <div>
@@ -31,13 +31,8 @@ const { sectionsCount, postsPerSectionCount, sections } = useDummyData()
         />
       </div>
     </div>
-    <div class="grow flex justify-center items-center overflow-hidden">
-      <SurfaceSection
-        v-for="section in sections"
-        :key="section.id"
-        :id="section.id"
-        class="mx-2.5 first:ms-0 last:me-0"
-      />
+    <div class="grow flex justify-center items-center gap-2.5 overflow-hidden p-2">
+      <SurfaceSection v-for="section in sections" :key="section.id" :id="section.id" />
     </div>
   </main>
 </template>

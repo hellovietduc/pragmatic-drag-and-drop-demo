@@ -55,10 +55,11 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
       :orientation="DragIndicatorOrientation.Horizontal"
       :class="[
         '!absolute',
-        'inset-x-0',
+        'start-0',
+        'end-1.5',
         {
-          '-top-2': dragIndicatorEdge === 'top',
-          '-bottom-2': dragIndicatorEdge === 'bottom'
+          '-top-[9px]': dragIndicatorEdge === 'top',
+          '-bottom-[9px]': dragIndicatorEdge === 'bottom'
         }
       ]"
     />
