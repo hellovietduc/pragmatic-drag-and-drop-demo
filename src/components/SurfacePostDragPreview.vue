@@ -4,6 +4,7 @@ import { useDummyData } from '@/composables/useDummyData'
 
 const props = defineProps<{
   id: string
+  isDragPreview?: boolean
 }>()
 
 const { postById } = useDummyData()
@@ -21,7 +22,8 @@ const post = computed(() => postById.value[props.id])
       'rounded-xl',
       'shadow-lg',
       'p-2',
-      'bg-stone-100'
+      isDragPreview ? 'bg-[rgba(148,102,232)]' : 'bg-stone-100',
+      isDragPreview && 'text-slate-200'
     ]"
   >
     <h2 class="select-none">{{ post.subject }}</h2>

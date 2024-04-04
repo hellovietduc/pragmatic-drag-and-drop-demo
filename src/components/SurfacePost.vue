@@ -36,7 +36,7 @@ const { itemState } = useDraggableElement({
   type: 'post',
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
-  dragPreviewComponentProps: { id: props.id },
+  dragPreviewComponentProps: { id: props.id, isDragPreview: true },
   onDragStart: () => (isDraggingPost.value = true),
   onDrop: () => (isDraggingPost.value = false)
 })
@@ -54,8 +54,11 @@ const { dragIndicatorEdge } = useDropTargetForElements({
         `[data-id="${payload.sourceData.postId}"]`
       )
       if (!movedElement) return
-      movedElement.scrollIntoView()
-      flashElement(movedElement, 'rgba(148,102,232,0.2)')
+      movedElement.scrollIntoView({
+        block: 'center',
+        inline: 'center'
+      })
+      flashElement(movedElement, '#9466e8', 500)
     })
   }
 })
@@ -79,7 +82,7 @@ const xDragIndicator = computed(
         'w-max',
         'p-2',
         'bg-stone-100',
-        isDraggingThisPost && 'opacity-40'
+        isDraggingThisPost && 'opacity-30'
       ]"
       :data-id="id"
     >
@@ -98,7 +101,7 @@ const xDragIndicator = computed(
     <SurfacePostDragPreview
       v-show="isDraggingPost"
       :id="id"
-      :class="isDraggingThisPost && 'opacity-40'"
+      :class="isDraggingThisPost && 'opacity-30'"
     />
     <DragIndicator
       v-if="xDragIndicator"

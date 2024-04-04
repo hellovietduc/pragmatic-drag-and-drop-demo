@@ -4,6 +4,7 @@ import { useDummyData } from '@/composables/useDummyData'
 
 const props = defineProps<{
   id: string
+  isDragPreview?: boolean
 }>()
 
 const { sectionById } = useDummyData()
@@ -13,7 +14,17 @@ const section = computed(() => sectionById.value[props.id])
 <template>
   <section :class="['relative', 'flex', 'flex-col', 'gap-4']">
     <!-- Section title -->
-    <h1 class="rounded-lg px-3 py-2 bg-sky-300 font-semibold select-none">
+    <h1
+      :class="[
+        'rounded-lg',
+        'px-3',
+        'py-2',
+        'font-semibold',
+        'select-none',
+        isDragPreview ? 'bg-[rgba(148,102,232)]' : 'bg-sky-300',
+        isDragPreview && 'text-slate-200'
+      ]"
+    >
       {{ section.title }}
     </h1>
   </section>

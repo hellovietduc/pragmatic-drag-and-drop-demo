@@ -12,6 +12,9 @@ export const flashElement = (element: HTMLElement, color: string, ms: number = 2
     element.appendChild(overlay)
     raf(() => {
       overlay.style.opacity = '0'
+      setTimeout(() => {
+        overlay.remove()
+      }, ms)
     })
   })
 }

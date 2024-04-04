@@ -43,7 +43,7 @@ const { itemState } = useDraggableElement({
   itemData,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
-  dragPreviewComponentProps: { id: props.id }
+  dragPreviewComponentProps: { id: props.id, isDragPreview: true }
 })
 
 const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
@@ -83,7 +83,7 @@ const xDragIndicator = computed(
   <div class="relative h-full">
     <section
       ref="rootEl"
-      :class="['relative', 'flex', 'flex-col', 'w-[246px]', 'h-full', isDragging && 'opacity-40']"
+      :class="['relative', 'flex', 'flex-col', 'w-[246px]', 'h-full', isDragging && 'opacity-30']"
     >
       <!-- Section title -->
       <h1
