@@ -44,7 +44,7 @@ const getItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData =
   return payload.data as ItemData
 }
 
-export type ItemState =
+type ItemState =
   | { type: 'idle' }
   | { type: 'preview'; container: HTMLElement }
   | { type: 'dragging' }
@@ -69,7 +69,7 @@ const renderDragPreview = <TProps extends ComponentProps>(
 
 const noOp = () => {}
 
-export type OnDropPayload = {
+type OnDropPayload = {
   sourceData: ItemData
   targetData: ItemData
   closestEdgeOfTarget: Edge
@@ -250,3 +250,5 @@ export const useElementDragAndDrop = <
     dragIndicatorEdge
   }
 }
+
+export type { ItemState, OnDropPayload }
