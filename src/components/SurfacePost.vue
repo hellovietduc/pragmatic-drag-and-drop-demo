@@ -16,9 +16,9 @@ const rootEl = ref<HTMLElement>()
 const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
   itemData: { type: 'post', postId: props.id },
+  axis: 'vertical',
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps: { id: props.id },
-  dropTargetEdges: ['top', 'bottom'],
   canDrop: ({ type }) => type === 'post'
 })
 

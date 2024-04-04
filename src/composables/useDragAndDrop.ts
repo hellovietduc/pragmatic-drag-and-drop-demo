@@ -11,7 +11,8 @@ import {
   type Ref,
   ref,
   onMounted,
-  onBeforeUnmount
+  onBeforeUnmount,
+  computed
 } from 'vue'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
@@ -20,6 +21,9 @@ import {
   extractClosestEdge,
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+
+type DragData = ElementDragPayload['data']
+type ComponentProps = Record<string, unknown>
 
 export type ItemState =
   | { type: 'idle' }
@@ -30,10 +34,10 @@ export type ItemState =
 const IDLE_STATE: ItemState = { type: 'idle' }
 const DRAGGING_STATE: ItemState = { type: 'dragging' }
 
-const renderDragPreview = (
+const renderDragPreview = <TProps extends ComponentProps>(
   container: HTMLElement,
   component: Component,
-  props: Record<string, unknown>
+  props?: TProps
 ) => {
   const app = createApp({
     render: () => h(Teleport, { to: container }, [h(component, props)])
@@ -42,25 +46,32 @@ const renderDragPreview = (
   return () => app.unmount()
 }
 
-export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
+export const useDragAndDrop = <
+  TItemData extends DragData,
+  TDragPreviewComponentProps extends ComponentProps = ComponentProps
+>({
   elementRef,
   itemData,
+  axis,
+  dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
-  dropTargetEdges,
-  dragHandleElementRef,
   canDrop
 }: {
   elementRef: Ref<HTMLElement | undefined>
   itemData: TItemData
-  dragPreviewComponent: Component
-  dragPreviewComponentProps: Record<string, unknown>
-  dropTargetEdges: Edge[]
+  axis: 'vertical' | 'horizontal'
   dragHandleElementRef?: Ref<HTMLElement | undefined>
-  canDrop?: (data: Record<string, unknown>) => boolean
+  dragPreviewComponent?: Component<TDragPreviewComponentProps>
+  dragPreviewComponentProps?: TDragPreviewComponentProps
+  canDrop?: (data: DragData) => boolean
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
   const dragIndicatorEdge = ref<Edge | null>(null)
+
+  const allowedEdges = computed<Edge[]>(() => {
+    return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
+  })
 
   let cleanUpDraggable: () => void | undefined
   let cleanUpDropTarget: () => void | undefined
@@ -78,11 +89,16 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
         return itemData
       },
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        if (!dragPreviewComponent) return
         setCustomNativeDragPreview({
           nativeSetDragImage,
           getOffset: centerUnderPointer,
           render: ({ container }) => {
-            return renderDragPreview(container, dragPreviewComponent, dragPreviewComponentProps)
+            return renderDragPreview<TDragPreviewComponentProps>(
+              container,
+              dragPreviewComponent,
+              dragPreviewComponentProps
+            )
           }
         })
       },
@@ -106,7 +122,7 @@ export const useDragAndDrop = <TItemData extends Record<string, unknown>>({
         return attachClosestEdge(itemData, {
           element: elementRef.value,
           input,
-          allowedEdges: dropTargetEdges
+          allowedEdges: allowedEdges.value
         })
       },
       canDrop: ({ source }) => {

@@ -19,10 +19,10 @@ const dragHandle = ref<HTMLElement>()
 const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
   itemData: { type: 'section', sectionId: props.id },
+  axis: 'horizontal',
+  dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
   dragPreviewComponentProps: { id: props.id },
-  dropTargetEdges: ['left', 'right'],
-  dragHandleElementRef: dragHandle,
   canDrop: ({ type }) => type === 'section'
 })
 
