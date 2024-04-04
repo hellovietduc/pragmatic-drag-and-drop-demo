@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { useDummyData } from '@/composables/useDummyData'
 import SurfaceSection from '@/components/SurfaceSection.vue'
+import { type OnDropPayload } from '@/composables/useDragAndDrop'
 
 const { sectionsCount, postsPerSectionCount, sections } = useDummyData()
+
+const handleSectionReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDropPayload) => {
+  console.log('🚀 dragged section', sourceData, 'to', targetData, 'near the', closestEdgeOfTarget)
+}
 </script>
 
 <template>
@@ -32,7 +37,12 @@ const { sectionsCount, postsPerSectionCount, sections } = useDummyData()
       </div>
     </div>
     <div class="grow flex justify-center items-center gap-2.5 overflow-hidden p-2">
-      <SurfaceSection v-for="section in sections" :key="section.id" :id="section.id" />
+      <SurfaceSection
+        v-for="section in sections"
+        :key="section.id"
+        :id="section.id"
+        @reorder="handleSectionReorder"
+      />
     </div>
   </main>
 </template>

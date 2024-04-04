@@ -5,6 +5,7 @@ import {
   dropTargetForElements,
   type ElementDragPayload
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import type { CleanupFn, DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types'
 import {
   createApp,
   h,
@@ -24,8 +25,24 @@ import {
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 
-type DragData = ElementDragPayload['data']
-type ComponentProps = Record<string, unknown>
+type DragData = Record<string | symbol, unknown>
+
+/** Symbol to identify events made by Pragmatic DnD. */
+const itemKey = Symbol('item')
+
+type ItemData = DragData & {
+  [itemKey]: true
+  type: string
+  instanceId: symbol
+}
+
+const isItemData = (data: DragData): data is ItemData => {
+  return data[itemKey] === true
+}
+
+const getItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData => {
+  return payload.data as ItemData
+}
 
 export type ItemState =
   | { type: 'idle' }
@@ -36,7 +53,7 @@ export type ItemState =
 const IDLE_STATE: ItemState = { type: 'idle' }
 const DRAGGING_STATE: ItemState = { type: 'dragging' }
 
-const noOp = () => {}
+type ComponentProps = Record<string, unknown>
 
 const renderDragPreview = <TProps extends ComponentProps>(
   container: HTMLElement,
@@ -50,54 +67,90 @@ const renderDragPreview = <TProps extends ComponentProps>(
   return () => app.unmount()
 }
 
+const noOp = () => {}
+
+export type OnDropPayload = {
+  sourceData: ItemData
+  targetData: ItemData
+  closestEdgeOfTarget: Edge
+}
+
 export const useDragAndDrop = <
   TItemData extends DragData,
   TDragPreviewComponentProps extends ComponentProps = ComponentProps
 >({
   elementRef,
-  itemData,
+  type,
   axis,
+  itemData,
   dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
-  canDrop,
-  scrollContainerElementRef
+  scrollContainerElementRef,
+  onDrop
 }: {
+  /**
+   * Element to be made draggable.
+   */
   elementRef: Ref<HTMLElement | undefined>
-  itemData: TItemData
+  /**
+   * Used to differentiate multiple types of drags on a page.
+   */
+  type: ItemData['type']
+  /**
+   * Drag direction.
+   */
   axis: 'vertical' | 'horizontal'
+  /**
+   * Data to attach with this draggable element.
+   */
+  itemData: TItemData
+  /**
+   * Element to be used as a drag handle.
+   * @default elementRef
+   */
   dragHandleElementRef?: Ref<HTMLElement | undefined>
+  /**
+   * Element to be used as a drag preview.
+   * @default elementRef
+   */
   dragPreviewComponent?: Component<TDragPreviewComponentProps>
+  /**
+   * Props to be passed to the drag preview component.
+   */
   dragPreviewComponentProps?: TDragPreviewComponentProps
-  canDrop?: (data: DragData) => boolean
+  /**
+   * Element to be enable auto-scrolling for.
+   */
   scrollContainerElementRef?: Ref<HTMLElement | undefined>
+  /**
+   * Event handler for when a draggable element is dropped on a drop target.
+   */
+  onDrop?: (payload: OnDropPayload) => void
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
-  const allowedEdges = computed<Edge[]>(() => {
-    return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
-  })
+  /** Symbol to identify the current draggable instance. */
+  const instanceId = Symbol('instanceId')
 
-  let cleanUp: () => void
+  const data: ItemData = { ...itemData, [itemKey]: true, type, instanceId }
 
-  const getItemData = (source: ElementDragPayload): TItemData => {
-    return source.data as TItemData
-  }
-
+  /**
+   * Makes the element draggable.
+   */
   const makeElementDraggable = () => {
     if (!elementRef.value) return noOp
     return draggable({
       element: elementRef.value,
       dragHandle: dragHandleElementRef?.value,
-      getInitialData: () => {
-        return itemData
-      },
+      getInitialData: () => data,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        // Only render a custom drag preview if a component is provided.
         if (!dragPreviewComponent) return
         setCustomNativeDragPreview({
           nativeSetDragImage,
-          getOffset: centerUnderPointer,
+          getOffset: centerUnderPointer, // Center the drag preview under the pointer.
           render: ({ container }) => {
             return renderDragPreview<TDragPreviewComponentProps>(
               container,
@@ -107,62 +160,86 @@ export const useDragAndDrop = <
           }
         })
       },
-      onDragStart: ({ source }) => {
-        console.log('🚀 drag start', source.data)
+      onDragStart: () => {
         itemState.value = DRAGGING_STATE
       },
-      onDrop: ({ source }) => {
-        console.log('🚀 drop', source.data)
+      onDrop: () => {
+        // `onDrop` may not fired if the element is destroyed in a virtualized list.
+        // DO NOT handle reordering logic here.
         itemState.value = IDLE_STATE
       }
     })
   }
 
-  const setupDropTarget = () => {
+  const allowedEdges = computed<Edge[]>(() => {
+    return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
+  })
+
+  /**
+   * Also makes this element a drop target for other draggable elements.
+   */
+  const setUpDropTarget = () => {
     if (!elementRef.value) return noOp
-    return combine(
-      dropTargetForElements({
-        element: elementRef.value,
-        getData: ({ source, input }) => {
-          if (!elementRef.value) return source.data
-          return attachClosestEdge(itemData, {
-            element: elementRef.value,
-            input,
-            allowedEdges: allowedEdges.value
-          })
-        },
-        canDrop: ({ source }) => {
-          return canDrop?.(getItemData(source)) ?? true
-        },
-        getIsSticky: () => true,
-        onDrag: ({ self, source }) => {
-          const isSource = source.element === elementRef.value
-          if (isSource) {
-            dragIndicatorEdge.value = null
-            return
-          }
-          const closestEdge = extractClosestEdge(self.data)
-          dragIndicatorEdge.value = closestEdge
-        },
-        onDragLeave() {
-          dragIndicatorEdge.value = null
-        },
-        onDrop() {
-          console.log(`🚀 drop to target`, itemData)
-          itemState.value = IDLE_STATE
-          dragIndicatorEdge.value = null
+    return dropTargetForElements({
+      element: elementRef.value,
+      getData: ({ input }) => {
+        if (!elementRef.value) return data
+        // Attach which is the closest edge to the pointer on the drop target.
+        return attachClosestEdge(data, {
+          element: elementRef.value,
+          input,
+          allowedEdges: allowedEdges.value
+        })
+      },
+      canDrop: ({ source }) => {
+        // Only allow dropping elements of the same type.
+        return getItemData(source).type === type
+      },
+      getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
+      onDrag: ({ self }) => {
+        const closestEdge = extractClosestEdge(self.data)
+        dragIndicatorEdge.value = closestEdge
+      },
+      onDragLeave() {
+        dragIndicatorEdge.value = null
+      },
+      onDrop({ source, location }) {
+        itemState.value = IDLE_STATE
+        dragIndicatorEdge.value = null
+
+        const target = location.current.dropTargets[0]
+        if (!target) {
+          return
         }
-      }),
-      scrollContainerElementRef?.value
-        ? autoScrollForElements({
-            element: scrollContainerElementRef.value
-          })
-        : noOp
-    )
+
+        const sourceData = getItemData(source)
+        const targetData = getItemData(target)
+
+        if (!isItemData(sourceData) || !isItemData(targetData)) {
+          return
+        }
+
+        const closestEdgeOfTarget = extractClosestEdge(targetData)
+
+        if (closestEdgeOfTarget) onDrop?.({ sourceData, targetData, closestEdgeOfTarget })
+      }
+    })
   }
 
+  /**
+   * Enables auto-scrolling for the scroll container.
+   */
+  const enableAutoScroll = () => {
+    if (!scrollContainerElementRef?.value) return noOp
+    return autoScrollForElements({
+      element: scrollContainerElementRef.value
+    })
+  }
+
+  let cleanUp: CleanupFn
+
   onMounted(() => {
-    cleanUp = combine(makeElementDraggable(), setupDropTarget())
+    cleanUp = combine(makeElementDraggable(), setUpDropTarget(), enableAutoScroll())
   })
 
   onBeforeUnmount(() => {

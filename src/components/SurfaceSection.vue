@@ -3,11 +3,15 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
-import { useDragAndDrop } from '@/composables/useDragAndDrop'
+import { useDragAndDrop, type OnDropPayload } from '@/composables/useDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 
 const props = defineProps<{
   id: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'reorder', payload: OnDropPayload): void
 }>()
 
 const { sectionById, postsBySectionId } = useDummyData()
@@ -19,16 +23,21 @@ const scrollContainer = ref<HTMLElement>()
 
 const { itemState, dragIndicatorEdge } = useDragAndDrop({
   elementRef: rootEl,
-  itemData: { type: 'section', sectionId: props.id },
+  type: 'section',
   axis: 'horizontal',
+  itemData: { sectionId: props.id },
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
   dragPreviewComponentProps: { id: props.id },
-  canDrop: ({ type }) => type === 'section',
-  scrollContainerElementRef: scrollContainer
+  scrollContainerElementRef: scrollContainer,
+  onDrop: (payload) => emit('reorder', payload)
 })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
+
+const handlePostReorder = ({ sourceData, targetData, closestEdgeOfTarget }: OnDropPayload) => {
+  console.log('🚀 dragged post', sourceData, 'to', targetData, 'near the', closestEdgeOfTarget)
+}
 </script>
 
 <template>
@@ -47,7 +56,9 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
         v-for="post in postsBySectionId[section.id]"
         :key="post.id"
         :id="post.id"
+        :section-id="id"
         class="last:mb-4"
+        @reorder="handlePostReorder"
       />
     </div>
     <DragIndicator
@@ -59,7 +70,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
         {
           'start-0': dragIndicatorEdge === 'left',
           '-end-3': dragIndicatorEdge === 'right'
-        },
+        }
       ]"
     />
   </section>
