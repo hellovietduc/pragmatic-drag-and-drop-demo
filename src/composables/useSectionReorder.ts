@@ -37,8 +37,8 @@ export const useSectionReorder = () => {
     const newSortIndex = getSortIndexBetweenItems(prevSection, nextSection)
     if (!newSortIndex) return
 
-    const targetSection = sortedSections.value[sourceIndex]
-    targetSection.sortIndex = newSortIndex
+    const sourceSection = sortedSections.value[sourceIndex]
+    sourceSection.sortIndex = newSortIndex
   }
 
   return {

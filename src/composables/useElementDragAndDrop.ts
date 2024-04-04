@@ -13,8 +13,7 @@ import {
   type Ref,
   ref,
   onMounted,
-  onBeforeUnmount,
-  computed
+  onBeforeUnmount
 } from 'vue'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
@@ -23,6 +22,11 @@ import {
   extractClosestEdge,
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+import { keyBy } from 'lodash-es'
+
+const isVerticalEdge = (edge: Edge): boolean => {
+  return edge === 'top' || edge === 'bottom'
+}
 
 type DragData = Record<string | symbol, unknown>
 
@@ -46,6 +50,8 @@ const makeItemData = <TItemData>(itemData: TItemData, type: ItemData['type']): I
   return { ...itemData, [ITEM_KEY]: true, type }
 }
 
+const noOp = () => {}
+
 type ItemState =
   | { type: 'idle' }
   | { type: 'preview'; container: HTMLElement }
@@ -67,13 +73,6 @@ const renderDragPreview = <TProps extends ComponentProps>(
   })
   app.mount(container)
   return () => app.unmount()
-}
-
-const noOp = () => {}
-
-type OnDropPayload<TItemData extends DragData> = {
-  sourceData: ItemData & TItemData
-  targetData: ItemData & TItemData
 }
 
 /**
@@ -168,14 +167,19 @@ const useDraggableElement = <
   }
 }
 
+type OnDropPayload<TItemData extends DragData> = {
+  sourceData: ItemData & TItemData
+  targetData: ItemData & TItemData
+}
+
 /**
  * Makes an element a drop target for other draggable elements.
  */
 const useDropTargetForElements = <TItemData extends DragData>({
   elementRef,
-  type,
-  axis,
+  types,
   itemData,
+  ignoresInnerDrops = false,
   onDrop
 }: {
   /**
@@ -183,17 +187,17 @@ const useDropTargetForElements = <TItemData extends DragData>({
    */
   elementRef: Ref<HTMLElement | undefined>
   /**
-   * Used to differentiate multiple types of drags on a page.
+   * Types of draggable elements that can be dropped on this target.
    */
-  type: ItemData['type']
-  /**
-   * Drag direction.
-   */
-  axis: 'vertical' | 'horizontal'
+  types: { type: ItemData['type']; axis: 'vertical' | 'horizontal' }[]
   /**
    * Data to attach with this drop target.
    */
   itemData: TItemData
+  /**
+   * Whether to ignore drop events from inner drop targets.
+   */
+  ignoresInnerDrops?: boolean
   /**
    * Event handler for when a draggable element is dropped on a drop target.
    */
@@ -201,28 +205,39 @@ const useDropTargetForElements = <TItemData extends DragData>({
 }) => {
   const dragIndicatorEdge = ref<Edge | null>(null)
 
-  const allowedEdges = computed<Edge[]>(() => {
-    return axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
-  })
+  const allowedEdgesByType = keyBy(
+    types.map(({ type, axis }) => {
+      return {
+        type,
+        allowedEdges: axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
+      } as { type: string; allowedEdges: Edge[] }
+    }),
+    'type'
+  )
 
-  const data = makeItemData(itemData, type)
+  const dataByType = keyBy(
+    types.map(({ type }) => makeItemData(itemData, type)),
+    'type'
+  )
 
   const setUpDropTarget = () => {
     if (!elementRef.value) return noOp
     return dropTargetForElements({
       element: elementRef.value,
-      getData: ({ input }) => {
-        if (!elementRef.value) return data
+      getData: ({ source, input }) => {
+        const sourceType = extractItemData(source).type
+        if (!elementRef.value) return dataByType[sourceType]
         // Attach which is the closest edge to the pointer on the drop target.
-        return attachClosestEdge(data, {
+        return attachClosestEdge(dataByType[sourceType], {
           element: elementRef.value,
           input,
-          allowedEdges: allowedEdges.value
+          allowedEdges: allowedEdgesByType[sourceType].allowedEdges
         })
       },
       canDrop: ({ source }) => {
-        // Only allow dropping elements of the same type.
-        return extractItemData(source).type === type
+        // Only allow dropping items of the specified types.
+        const sourceType = extractItemData(source).type
+        return types.some(({ type }) => type === sourceType)
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       onDrag: ({ self }) => {
@@ -231,11 +246,15 @@ const useDropTargetForElements = <TItemData extends DragData>({
       onDragLeave() {
         dragIndicatorEdge.value = null
       },
-      onDrop({ source, location }) {
+      onDrop({ self, source, location }) {
         dragIndicatorEdge.value = null
 
+        // If there are nested drop targets all of them will have
+        // their `onDrop` callbacks executed.
+        // Use `ignoresInnerDrops` to skip handling nested drops
+        // from an outer drop target.
         const target = location.current.dropTargets[0]
-        if (!target) {
+        if (!target || (ignoresInnerDrops && self.element !== target.element)) {
           return
         }
 
@@ -295,5 +314,5 @@ const useDragAndDropAutoScroll = ({
   })
 }
 
-export { useDraggableElement, useDropTargetForElements, useDragAndDropAutoScroll }
+export { isVerticalEdge, useDraggableElement, useDropTargetForElements, useDragAndDropAutoScroll }
 export type { DragData, ItemState, ItemData, OnDropPayload }

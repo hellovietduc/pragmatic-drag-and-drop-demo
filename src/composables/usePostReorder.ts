@@ -5,20 +5,30 @@ import { getSortIndexBetweenItems } from '@/bits/reorder'
 
 export type PostDragData = { postId: string; sectionId: string }
 
+type Optional<T extends object, K extends keyof T> = Omit<T, K> & Partial<T>
+
 export const usePostReorder = () => {
   const { postsBySectionId } = useDummyData()
 
-  const reorderPost = (source: PostDragData & ItemData, target: PostDragData & ItemData) => {
+  const reorderPost = (
+    source: PostDragData & ItemData,
+    target: Optional<PostDragData, 'postId'> & ItemData
+  ) => {
     const sourcePostsArray = postsBySectionId.value[source.sectionId]
     const targetPostsArray = postsBySectionId.value[target.sectionId]
 
     const sourceIndex = sourcePostsArray.findIndex((post) => post.id === source.postId)
-    const targetIndex = targetPostsArray.findIndex((post) => post.id === target.postId)
+    const targetIndex = targetPostsArray?.findIndex((post) => post.id === target.postId)
 
     const isValidSource = sourceIndex >= 0 && sourceIndex < sourcePostsArray.length
-    const isValidTarget = targetIndex >= 0 && targetIndex < targetPostsArray.length
 
-    if (!isValidSource || !isValidTarget) {
+    if (!isValidSource) {
+      return
+    }
+
+    if (targetIndex === -1 || targetIndex === undefined) {
+      const sourcePost = sourcePostsArray[sourceIndex]
+      sourcePost.sectionId = target.sectionId
       return
     }
 
@@ -38,9 +48,9 @@ export const usePostReorder = () => {
     const newSortIndex = getSortIndexBetweenItems(prevPost, nextPost)
     if (!newSortIndex) return
 
-    const targetPost = sourcePostsArray[sourceIndex]
-    targetPost.sortIndex = newSortIndex
-    targetPost.sectionId = target.sectionId
+    const sourcePost = sourcePostsArray[sourceIndex]
+    sourcePost.sortIndex = newSortIndex
+    sourcePost.sectionId = target.sectionId
   }
 
   return {

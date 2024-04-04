@@ -52,6 +52,9 @@ export const useDummyData = createSharedComposable(() => {
       sectionsCount,
       (count) => {
         sections.value = generateSections(count)
+        posts.value = sections.value.flatMap((section, index) =>
+          generatePosts(postsPerSectionCount.value, section.id, index)
+        )
       },
       { immediate: true }
     )

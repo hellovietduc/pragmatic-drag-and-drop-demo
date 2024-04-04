@@ -7,7 +7,8 @@ import {
   useDraggableElement,
   useDropTargetForElements,
   useDragAndDropAutoScroll,
-  type OnDropPayload
+  type OnDropPayload,
+  isVerticalEdge
 } from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
@@ -24,6 +25,12 @@ const emit = defineEmits<{
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
+const { reorderPost } = usePostReorder()
+
+const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
+  reorderPost(sourceData, targetData)
+}
+
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
@@ -38,23 +45,35 @@ const { itemState } = useDraggableElement({
   dragPreviewComponentProps: { id: props.id }
 })
 
-const { dragIndicatorEdge } = useDropTargetForElements({
+const { dragIndicatorEdge } = useDropTargetForElements<SectionDragData | PostDragData>({
   elementRef: rootEl,
-  type: 'section',
+  types: [
+    {
+      type: 'section',
+      axis: 'horizontal'
+    },
+    {
+      type: 'post',
+      axis: 'vertical'
+    }
+  ],
   itemData,
-  axis: 'horizontal',
-  onDrop: (payload) => emit('reorder', payload)
+  ignoresInnerDrops: true,
+  onDrop: (payload) => {
+    if (payload.sourceData.type === 'section') {
+      emit('reorder', payload)
+    } else if (payload.sourceData.type === 'post' && payload.targetData.postId === undefined) {
+      handlePostReorder(payload as OnDropPayload<PostDragData>)
+    }
+  }
 })
 
 useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
-
-const { reorderPost } = usePostReorder()
-
-const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
-  reorderPost(sourceData, targetData)
-}
+const xDragIndicator = computed(
+  () => dragIndicatorEdge.value && !isVerticalEdge(dragIndicatorEdge.value)
+)
 </script>
 
 <template>
@@ -94,7 +113,7 @@ const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragDat
       </div>
     </section>
     <DragIndicator
-      v-if="dragIndicatorEdge"
+      v-if="xDragIndicator"
       :orientation="DragIndicatorOrientation.Vertical"
       :class="[
         '!absolute',

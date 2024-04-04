@@ -4,6 +4,7 @@ import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndica
 import { computed, ref } from 'vue'
 import { useDummyData } from '@/composables/useDummyData'
 import {
+  isVerticalEdge,
   type OnDropPayload,
   useDraggableElement,
   useDropTargetForElements
@@ -35,13 +36,15 @@ const { itemState } = useDraggableElement({
 
 const { dragIndicatorEdge } = useDropTargetForElements({
   elementRef: rootEl,
-  type: 'post',
+  types: [{ type: 'post', axis: 'vertical' }],
   itemData,
-  axis: 'vertical',
   onDrop: (payload) => emit('reorder', payload)
 })
 
 const isDragging = computed(() => itemState.value.type === 'dragging')
+const xDragIndicator = computed(
+  () => dragIndicatorEdge.value && isVerticalEdge(dragIndicatorEdge.value)
+)
 </script>
 
 <template>
@@ -73,7 +76,7 @@ const isDragging = computed(() => itemState.value.type === 'dragging')
       />
     </article>
     <DragIndicator
-      v-if="dragIndicatorEdge"
+      v-if="xDragIndicator"
       :orientation="DragIndicatorOrientation.Horizontal"
       :class="[
         '!absolute',
