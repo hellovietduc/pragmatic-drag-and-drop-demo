@@ -117,7 +117,7 @@ const useDraggableElement = <
   /**
    * Props to be passed to the drag preview component.
    */
-  dragPreviewComponentProps?: TDragPreviewComponentProps
+  dragPreviewComponentProps?: Ref<TDragPreviewComponentProps>
   /**
    * A drag operation has started.
    */
@@ -147,7 +147,7 @@ const useDraggableElement = <
             return renderDragPreview<TDragPreviewComponentProps>(
               container,
               dragPreviewComponent,
-              dragPreviewComponentProps
+              dragPreviewComponentProps?.value
             )
           }
         })

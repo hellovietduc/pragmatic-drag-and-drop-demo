@@ -30,13 +30,14 @@ const { isDraggingPost } = useDraggingState()
 
 const rootEl = ref<HTMLElement>()
 const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
+const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
 const { itemState } = useDraggableElement({
   elementRef: rootEl,
   type: 'post',
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
-  dragPreviewComponentProps: { id: props.id, isDragPreview: true },
+  dragPreviewComponentProps,
   onDragStart: () => (isDraggingPost.value = true),
   onDrop: () => (isDraggingPost.value = false)
 })

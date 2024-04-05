@@ -42,6 +42,7 @@ const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
 const itemData = computed<SectionDragData>(() => ({ sectionId: props.id }))
+const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
 const { itemState } = useDraggableElement({
   elementRef: rootEl,
@@ -49,7 +50,7 @@ const { itemState } = useDraggableElement({
   itemData,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
-  dragPreviewComponentProps: { id: props.id, isDragPreview: true }
+  dragPreviewComponentProps
 })
 
 const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
