@@ -243,7 +243,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
       getData: ({ source, input }) => {
         const sourceType = extractItemData(source).type
         if (!elementRef.value) return dataByType.value[sourceType]
-        // Attach which is the closest edge to the pointer on the drop target.
+        // Attach the closest edge to the pointer on the drop target.
         return attachClosestEdge(dataByType.value[sourceType], {
           element: elementRef.value,
           input,

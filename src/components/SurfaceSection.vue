@@ -114,7 +114,7 @@ const xDragIndicator = computed(
       <!-- Post list -->
       <DynamicScroller
         v-if="isVirtualized"
-        :items="postsBySectionId[section.id]"
+        :items="postsBySectionId[section.id] || []"
         :min-item-size="216"
         class="h-full"
         item-class="ps-3.5 pt-4"
@@ -128,7 +128,7 @@ const xDragIndicator = computed(
 
       <div v-else ref="scrollContainer" class="flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
         <SurfacePost
-          v-for="post in postsBySectionId[section.id]"
+          v-for="post in postsBySectionId[section.id] || []"
           :key="post.id"
           :id="post.id"
           :section-id="id"
