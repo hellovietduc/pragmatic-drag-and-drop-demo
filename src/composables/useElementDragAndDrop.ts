@@ -13,7 +13,8 @@ import {
   type Ref,
   ref,
   onMounted,
-  onBeforeUnmount
+  onBeforeUnmount,
+  computed
 } from 'vue'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
@@ -102,7 +103,7 @@ const useDraggableElement = <
   /**
    * Data to attach with this draggable element.
    */
-  itemData: TItemData
+  itemData: Ref<TItemData>
   /**
    * Element to be used as a drag handle.
    * @default elementRef
@@ -128,14 +129,14 @@ const useDraggableElement = <
 }) => {
   const itemState = ref<ItemState>(IDLE_STATE)
 
-  const data = makeItemData(itemData, type)
+  const data = computed(() => makeItemData(itemData.value, type))
 
   const makeElementDraggable = () => {
     if (!elementRef.value) return noOp
     return draggable({
       element: elementRef.value,
       dragHandle: dragHandleElementRef?.value,
-      getInitialData: () => data,
+      getInitialData: () => data.value,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         // Only render a custom drag preview if a component is provided.
         if (!dragPreviewComponent) return
@@ -205,7 +206,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
   /**
    * Data to attach with this drop target.
    */
-  itemData: TItemData
+  itemData: Ref<TItemData>
   /**
    * Whether to ignore drop events from inner drop targets.
    */
@@ -228,9 +229,11 @@ const useDropTargetForElements = <TItemData extends DragData>({
     'type'
   )
 
-  const dataByType = keyBy(
-    types.map(({ type }) => makeItemData(itemData, type)),
-    'type'
+  const dataByType = computed(() =>
+    keyBy(
+      types.map(({ type }) => makeItemData(itemData.value, type)),
+      'type'
+    )
   )
 
   const setUpDropTarget = () => {
@@ -239,9 +242,9 @@ const useDropTargetForElements = <TItemData extends DragData>({
       element: elementRef.value,
       getData: ({ source, input }) => {
         const sourceType = extractItemData(source).type
-        if (!elementRef.value) return dataByType[sourceType]
+        if (!elementRef.value) return dataByType.value[sourceType]
         // Attach which is the closest edge to the pointer on the drop target.
-        return attachClosestEdge(dataByType[sourceType], {
+        return attachClosestEdge(dataByType.value[sourceType], {
           element: elementRef.value,
           input,
           allowedEdges: allowedEdgesByType[sourceType].allowedEdges

@@ -29,7 +29,7 @@ const post = computed(() => postById.value[props.id])
 const { isDraggingPost } = useDraggingState()
 
 const rootEl = ref<HTMLElement>()
-const itemData: PostDragData = { postId: props.id, sectionId: props.sectionId }
+const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
 
 const { itemState } = useDraggableElement({
   elementRef: rootEl,

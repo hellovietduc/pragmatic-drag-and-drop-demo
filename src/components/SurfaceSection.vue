@@ -34,13 +34,14 @@ const section = computed(() => sectionById.value[props.id])
 const { reorderPost } = usePostReorder()
 
 const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
+  console.log(`🚀 ~ dragged post from`, sourceData, `to`, targetData)
   reorderPost(sourceData, targetData)
 }
 
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
-const itemData: SectionDragData = { sectionId: props.id }
+const itemData = computed<SectionDragData>(() => ({ sectionId: props.id }))
 
 const { itemState } = useDraggableElement({
   elementRef: rootEl,
