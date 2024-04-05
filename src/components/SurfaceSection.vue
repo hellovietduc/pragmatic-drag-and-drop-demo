@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useVirtualizedListState } from '@/composables/useVirtualizedListState'
 import DragOverlay from '@/components/DragOverlay.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import SurfacePost from '@/components/SurfacePost.vue'
@@ -24,6 +25,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'reorder', payload: OnDropPayload<SectionDragData>): void
 }>()
+
+const { isVirtualized } = useVirtualizedListState()
 
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
@@ -108,20 +111,21 @@ const xDragIndicator = computed(
       </h1>
 
       <!-- Post list -->
-      <!-- <DynamicScroller
-      :items="postsBySectionId[section.id]"
-      :min-item-size="340"
-      class="h-full"
-      item-class="ps-3.5 pt-4"
-    >
-      <template #default="{ item, index, active }">
-        <DynamicScrollerItem :item="item" :active="active" :data-index="index" class="pb-4 w-max">
-          <SurfacePost :id="item.id" :section-id="id" @reorder="handlePostReorder" />
-        </DynamicScrollerItem>
-      </template>
-    </DynamicScroller> -->
+      <DynamicScroller
+        v-if="isVirtualized"
+        :items="postsBySectionId[section.id]"
+        :min-item-size="216"
+        class="h-full"
+        item-class="ps-3.5 pt-4"
+      >
+        <template #default="{ item, index, active }">
+          <DynamicScrollerItem :item="item" :active="active" :data-index="index" class="pb-4 w-max">
+            <SurfacePost :id="item.id" :section-id="id" @reorder="handlePostReorder" />
+          </DynamicScrollerItem>
+        </template>
+      </DynamicScroller>
 
-      <div ref="scrollContainer" class="flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
+      <div v-else ref="scrollContainer" class="flex flex-col gap-4 overflow-y-auto pt-4 ps-3.5">
         <SurfacePost
           v-for="post in postsBySectionId[section.id]"
           :key="post.id"

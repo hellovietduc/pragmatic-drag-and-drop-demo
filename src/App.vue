@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useDummyData } from '@/composables/useDummyData'
 import SurfaceContainer from '@/components/SurfaceContainer.vue'
+import { useVirtualizedListState } from '@/composables/useVirtualizedListState'
 
 const { sectionsCount, postsPerSectionCount } = useDummyData()
+const { isVirtualized } = useVirtualizedListState()
 </script>
 
 <template>
@@ -29,6 +31,10 @@ const { sectionsCount, postsPerSectionCount } = useDummyData()
           v-model="postsPerSectionCount"
           class="text-center"
         />
+      </div>
+      <div>
+        <label for="isVirtualized">Use virtualized list:</label>
+        <input id="isVirtualized" type="checkbox" v-model="isVirtualized" />
       </div>
     </div>
     <SurfaceContainer
