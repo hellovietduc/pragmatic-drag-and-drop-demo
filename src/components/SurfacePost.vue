@@ -51,7 +51,7 @@ const { dragIndicatorEdge } = useDropTargetForElements({
 
     raf(async () => {
       const movedElement = document.querySelector<HTMLElement>(
-        `[data-id="${payload.sourceData.postId}"]`
+        `[data-post-id="${payload.sourceData.postId}"]`
       )
       if (!movedElement) return
       movedElement.scrollIntoView({
@@ -84,7 +84,7 @@ const xDragIndicator = computed(
         'bg-stone-100',
         isDraggingThisPost && 'opacity-30'
       ]"
-      :data-id="id"
+      :data-post-id="id"
     >
       <h2 class="select-none">{{ post.subject }}</h2>
       <h3 class="select-none text-sm">{{ post.sortIndex }}</h3>

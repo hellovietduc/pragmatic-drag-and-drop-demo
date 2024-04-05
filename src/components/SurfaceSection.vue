@@ -14,6 +14,8 @@ import {
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
 import type { SectionDragData } from '@/composables/useSectionReorder'
+import { flashElement } from '@/bits/flash'
+import { raf } from '@/bits/raf'
 
 const props = defineProps<{
   id: string
@@ -63,10 +65,21 @@ const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
   itemData,
   ignoresInnerDrops: true,
   onDrop: (payload) => {
+    if (payload.sourceData.type === 'post' && payload.targetData.postId === undefined) {
+      handlePostReorder(payload as OnDropPayload<PostDragData>)
+      return
+    }
     if (payload.sourceData.type === 'section') {
       emit('reorder', payload)
-    } else if (payload.sourceData.type === 'post' && payload.targetData.postId === undefined) {
-      handlePostReorder(payload as OnDropPayload<PostDragData>)
+
+      raf(async () => {
+        const movedElement = document.querySelector<HTMLElement>(
+          `[data-section-header-id="${payload.sourceData.sectionId}"]`
+        )
+        if (!movedElement) return
+        movedElement.scrollIntoView()
+        flashElement(movedElement, '#9466e8', 500)
+      })
     }
   }
 })
@@ -89,6 +102,7 @@ const xDragIndicator = computed(
       <h1
         ref="dragHandle"
         class="z-10 rounded-lg mx-3.5 px-3 py-2 bg-sky-300 font-semibold select-none"
+        :data-section-header-id="id"
       >
         {{ section.title }}
       </h1>
