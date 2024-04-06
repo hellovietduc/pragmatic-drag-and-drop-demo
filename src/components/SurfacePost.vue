@@ -38,6 +38,7 @@ const { itemState } = useDraggableElement({
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps,
+  useNativeDragPreview: false,
   onDragStart: () => (isDraggingPost.value = true),
   onDrop: () => (isDraggingPost.value = false)
 })
