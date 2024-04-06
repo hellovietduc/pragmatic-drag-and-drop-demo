@@ -193,6 +193,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
   types,
   itemData,
   ignoresInnerDrops = false,
+  canDrop,
   onDrop
 }: {
   /**
@@ -211,6 +212,10 @@ const useDropTargetForElements = <TItemData extends DragData>({
    * Whether to ignore drop events from inner drop targets.
    */
   ignoresInnerDrops?: boolean
+  /**
+   * Whether the item can be dropped on the target.
+   */
+  canDrop?: (payload: { sourceData: ItemData; targetData: ItemData }) => boolean
   /**
    * Finished a drag and drop operation.
    */
@@ -253,7 +258,13 @@ const useDropTargetForElements = <TItemData extends DragData>({
       canDrop: ({ source }) => {
         // Only allow dropping items of the specified types.
         const sourceType = extractItemData(source).type
-        return types.some(({ type }) => type === sourceType)
+        const isAllowedDragType = types.some(({ type }) => type === sourceType)
+        return isAllowedDragType && canDrop
+          ? canDrop({
+              sourceData: extractItemData(source),
+              targetData: dataByType.value[sourceType]
+            })
+          : true
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       onDrag: ({ self }) => {
