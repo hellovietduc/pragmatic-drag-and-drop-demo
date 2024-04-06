@@ -3,8 +3,8 @@ import { flashElement } from '@/bits/flash'
 import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
-import { useDummyData } from '@/composables/useDummyData'
-import { useDraggingState } from '@/composables/useDraggingState'
+import { useDummyData } from '@/stores/useDummyData'
+import { useDraggingState } from '@/stores/useDraggingState'
 import {
   isVerticalEdge,
   type OnDropPayload,

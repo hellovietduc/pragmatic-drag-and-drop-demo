@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useVirtualizedListState } from '@/composables/useVirtualizedListState'
+import { useVirtualizedListState } from '@/stores/useVirtualizedListState'
 import DragOverlay from '@/components/DragOverlay.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
-import { useDummyData } from '@/composables/useDummyData'
+import { useDummyData } from '@/stores/useDummyData'
 import {
   useDraggableElement,
   useDropTargetForElements,

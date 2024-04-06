@@ -1,5 +1,5 @@
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
-import { useDummyData, type Section } from '@/composables/useDummyData'
+import { useDummyData, type Section } from '@/stores/useDummyData'
 import { getSortIndexBetweenItems } from '@/bits/reorder'
 import type { ItemData } from '@/composables/useElementDragAndDrop'
 

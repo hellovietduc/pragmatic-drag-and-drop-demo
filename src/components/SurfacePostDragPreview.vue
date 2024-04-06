@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDummyData } from '@/composables/useDummyData'
+import { useDummyData } from '@/stores/useDummyData'
 
 const props = defineProps<{
   id: string

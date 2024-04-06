@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useDummyData } from '@/composables/useDummyData'
+import { useDummyData } from '@/stores/useDummyData'
 import SurfaceContainer from '@/components/SurfaceContainer.vue'
-import { useVirtualizedListState } from '@/composables/useVirtualizedListState'
+import { useVirtualizedListState } from '@/stores/useVirtualizedListState'
 
 const { sectionsCount, postsPerSectionCount } = useDummyData()
 const { isVirtualized } = useVirtualizedListState()
