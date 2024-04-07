@@ -134,7 +134,9 @@ const renderCustomDragPreview = <TProps extends ComponentProps>(
     }
   })
 
-  const vm = app.mount(container) as ComponentPublicInstance<{
+  const child = document.createElement('div')
+  container.appendChild(child)
+  const vm = app.mount(child) as ComponentPublicInstance<{
     reposition: (position: Position) => void
   }>
 
