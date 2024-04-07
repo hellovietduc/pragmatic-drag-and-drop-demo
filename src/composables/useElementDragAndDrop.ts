@@ -7,7 +7,8 @@ import {
 import type {
   CleanupFn,
   DragLocationHistory,
-  DropTargetRecord
+  DropTargetRecord,
+  Position
 } from '@atlaskit/pragmatic-drag-and-drop/types'
 import {
   createApp,
@@ -38,7 +39,6 @@ const isVerticalEdge = (edge: Edge): boolean => {
 }
 
 type DragData = Record<string | symbol, unknown>
-type PointerLocation = { x: number; y: number }
 
 /** Symbol to identify events made by Pragmatic DnD. */
 const ITEM_KEY = Symbol('item')
@@ -60,7 +60,7 @@ const makeItemData = <TItemData>(itemData: TItemData & { type: ItemData['type'] 
   return { ...itemData, [ITEM_KEY]: true }
 }
 
-const extractPointerLocation = (location: DragLocationHistory): PointerLocation => {
+const extractPointerPosition = (location: DragLocationHistory): Position => {
   return {
     x: location.current.input.pageX,
     y: location.current.input.pageY
@@ -94,21 +94,23 @@ const renderNativeDragPreview = <TProps extends ComponentProps>(
 
 const renderCustomDragPreview = <TProps extends ComponentProps>(
   container: HTMLElement,
-  location: PointerLocation,
+  position: Position,
   component: Component,
   props?: TProps
 ) => {
   const app = createApp({
     data() {
       return {
-        x: location.x,
-        y: location.y
+        x: position.x,
+        y: position.y
       }
     },
     methods: {
-      reposition(location: PointerLocation) {
-        this.x = location.x
-        this.y = location.y
+      reposition(position: Position) {
+        const previewEl = this.$refs.previewEl as HTMLElement
+        const { x, y } = centerUnderPointer({ container: previewEl })
+        this.x = position.x - x
+        this.y = position.y - y
       }
     },
     expose: ['reposition'],
@@ -117,6 +119,7 @@ const renderCustomDragPreview = <TProps extends ComponentProps>(
         h(
           'div',
           {
+            ref: 'previewEl',
             style: {
               position: 'fixed',
               zIndex: Number.MAX_SAFE_INTEGER,
@@ -132,7 +135,7 @@ const renderCustomDragPreview = <TProps extends ComponentProps>(
   })
 
   const vm = app.mount(container) as ComponentPublicInstance<{
-    reposition: (location: PointerLocation) => void
+    reposition: (position: Position) => void
   }>
 
   return {
@@ -148,17 +151,17 @@ const useRenderCustomDragPreview = createSharedComposable(() => {
 
   const render = <TProps extends ComponentProps>(
     container: HTMLElement,
-    location: PointerLocation,
+    position: Position,
     component: Component,
     props?: TProps
   ) => {
-    const ctx = renderCustomDragPreview<TProps>(container, location, component, props)
+    const ctx = renderCustomDragPreview<TProps>(container, position, component, props)
     unmountFn = ctx.unmount
     repositionFn = ctx.reposition
   }
 
-  const reposition: RepositionFn = (location) => {
-    repositionFn(location)
+  const reposition: RepositionFn = (position) => {
+    repositionFn(position)
   }
 
   const unmount = () => {
@@ -242,29 +245,29 @@ const useDraggableElement = <
       dragHandle: dragHandleElementRef?.value,
       getInitialData: () => data.value,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
-        if (!useNativeDragPreview) {
-          disableNativeDragPreview({ nativeSetDragImage })
-          return
-        }
         if (!dragPreviewComponent) return
-        setCustomNativeDragPreview({
-          nativeSetDragImage,
-          getOffset: centerUnderPointer, // Center the drag preview under the pointer.
-          render: ({ container }) => {
-            return renderNativeDragPreview<TDragPreviewComponentProps>(
-              container,
-              dragPreviewComponent,
-              dragPreviewComponentProps?.value
-            )
-          }
-        })
+        if (!useNativeDragPreview && elementRef.value) {
+          disableNativeDragPreview({ nativeSetDragImage })
+        } else {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: centerUnderPointer, // Center the drag preview under the pointer.
+            render: ({ container }) => {
+              return renderNativeDragPreview<TDragPreviewComponentProps>(
+                container,
+                dragPreviewComponent,
+                dragPreviewComponentProps?.value
+              )
+            }
+          })
+        }
       },
       onDragStart: ({ location }) => {
         itemState.value = DRAGGING_STATE
         if (!useNativeDragPreview && dragPreviewComponent && elementRef.value) {
           useRenderCustomDragPreview().render(
             elementRef.value,
-            extractPointerLocation(location),
+            extractPointerPosition(location),
             dragPreviewComponent,
             dragPreviewComponentProps?.value
           )
@@ -275,7 +278,7 @@ const useDraggableElement = <
       },
       onDrag: ({ location }) => {
         if (!useNativeDragPreview && dragPreviewComponent) {
-          useRenderCustomDragPreview().reposition(extractPointerLocation(location))
+          useRenderCustomDragPreview().reposition(extractPointerPosition(location))
         }
       },
       onDrop: () => {
