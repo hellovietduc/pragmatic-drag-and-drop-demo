@@ -17,6 +17,7 @@ import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
 import type { SectionDragData } from '@/composables/useSectionReorder'
 import { flashElement } from '@/bits/flash'
 import { raf } from '@/bits/raf'
+import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
 
 const props = defineProps<{
   id: string
@@ -27,6 +28,7 @@ const emit = defineEmits<{
 }>()
 
 const { isVirtualized } = useVirtualizedListState()
+const { useNativeDragPreview } = useNativeDragPreviewState()
 
 const { sectionById, postsBySectionId } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
@@ -50,7 +52,8 @@ const { itemState } = useDraggableElement({
   itemData,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
-  dragPreviewComponentProps
+  dragPreviewComponentProps,
+  useNativeDragPreview: useNativeDragPreview.value
 })
 
 const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<

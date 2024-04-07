@@ -12,6 +12,7 @@ import {
   useDropTargetForElements
 } from '@/composables/useElementDragAndDrop'
 import type { PostDragData } from '@/composables/usePostReorder'
+import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
 import { raf } from '@/bits/raf'
 
 const props = defineProps<{
@@ -27,6 +28,7 @@ const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
 const { isDraggingPost } = useDraggingState()
+const { useNativeDragPreview } = useNativeDragPreviewState()
 
 const rootEl = ref<HTMLElement>()
 const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
@@ -38,7 +40,7 @@ const { itemState } = useDraggableElement({
   itemData,
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps,
-  useNativeDragPreview: false,
+  useNativeDragPreview: useNativeDragPreview.value,
   onDragStart: () => (isDraggingPost.value = true),
   onDrop: () => (isDraggingPost.value = false)
 })

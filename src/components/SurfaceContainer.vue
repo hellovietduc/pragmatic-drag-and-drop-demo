@@ -14,7 +14,7 @@ const handleSectionReorder = ({ sourceData, targetData }: OnDropPayload<SectionD
 </script>
 
 <template>
-  <div>
+  <div class="flex justify-center items-center gap-2.5 overflow-hidden p-2">
     <SurfaceSection
       v-for="section in sortedSections"
       :key="section.id"
