@@ -35,7 +35,10 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { keyBy } from 'lodash-es'
 import { createSharedComposable } from '@vueuse/core'
-import type { NativeMediaType } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types'
+import type {
+  ExternalDragPayload,
+  NativeMediaType
+} from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types'
 
 const isVerticalEdge = (edge: Edge): boolean => {
   return edge === 'top' || edge === 'bottom'
@@ -45,14 +48,17 @@ type DragData = Record<string | symbol, unknown>
 
 /** Symbol to identify events made by Pragmatic DnD. */
 const ITEM_KEY = Symbol('item')
+const EXTERNAL_DRAG_TYPE_PREFIX = 'application/x.pdnd-'
 
 type ItemData = DragData & {
   [ITEM_KEY]: true
   type: string
 }
+
 type ItemDataForExternal = {
-  nativeData?: { [K in NativeMediaType]?: string }
-  customData?: DragData
+  text?: string
+  html?: string
+  dragData?: DragData
 }
 
 const isItemData = (data: DragData): data is ItemData => {
@@ -65,6 +71,23 @@ const extractItemData = (payload: ElementDragPayload | DropTargetRecord): ItemDa
 
 const makeItemData = <TItemData>(itemData: TItemData & { type: ItemData['type'] }): ItemData => {
   return { ...itemData, [ITEM_KEY]: true }
+}
+
+const extractExternalDragType = (source: ExternalDragPayload): string | undefined => {
+  return source.types
+    .find((type) => type.startsWith(EXTERNAL_DRAG_TYPE_PREFIX))
+    ?.replace(EXTERNAL_DRAG_TYPE_PREFIX, '')
+}
+
+const makeItemDataForExternal = (
+  itemData: ItemDataForExternal & { type: ItemData['type'] }
+): { [K in NativeMediaType]?: string } => {
+  return {
+    'text/plain': itemData.text,
+    'text/html': itemData.html,
+    [`${EXTERNAL_DRAG_TYPE_PREFIX}${itemData.type}`]:
+      itemData.dragData && JSON.stringify(itemData.dragData)
+  }
 }
 
 const extractPointerPosition = (location: DragLocationHistory): Position => {
@@ -225,8 +248,19 @@ const useDraggableElement = <
   dragPreviewComponentProps?: Ref<TDragPreviewComponentProps>
   /**
    * Whether to use a native drag preview or a custom one.
-   * A custom drag preview is an HTML element that follows the pointer
-   * while dragging and cannot be dragged outside the viewport.
+   *
+   * Comparison between native and custom drag previews:
+   *
+   * Native drag preview:
+   * - Is rendered in a separate layer than the browser window.
+   * It doesn't affect the rendering performance of the page.
+   * - Can be dragged outside the browser window to other applications.
+   * - Has some caveats when rendering images inside the drag preview.
+   *
+   * Custom drag preview:
+   * - Is rendered in the DOM of the page.
+   * - Can't be dragged outside the browser window.
+   *
    * @default true
    */
   useNativeDragPreview?: boolean
@@ -242,14 +276,9 @@ const useDraggableElement = <
   const isDragging = ref(false)
 
   const internalData = computed(() => makeItemData({ ...itemData.value, type }))
-  const externalData = computed(() => {
-    const { customData, nativeData } = itemDataForExternal?.value ?? {}
-    return {
-      ...(nativeData ?? {}),
-      [`application/x.pdnd-${type}`]: customData && JSON.stringify(customData),
-      ...(customData ?? {})
-    }
-  })
+  const externalData = computed(() =>
+    itemDataForExternal ? makeItemDataForExternal({ ...itemDataForExternal.value, type }) : {}
+  )
 
   const makeElementDraggable = () => {
     if (!elementRef.value) return noOp
@@ -453,9 +482,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
     return dropTargetForExternal({
       element: elementRef.value,
       getData: ({ source, input }) => {
-        const sourceType = source.types
-          .find((type) => type.startsWith('application/x.pdnd-'))
-          ?.replace('application/x.pdnd-', '')
+        const sourceType = extractExternalDragType(source)
         if (!sourceType) return {}
         if (!elementRef.value) return dataByType.value[sourceType]
         // Attach the closest edge to the pointer on the drop target.
@@ -466,7 +493,10 @@ const useDropTargetForElements = <TItemData extends DragData>({
         })
       },
       canDrop: ({ source }) => {
-        return source.types.some((type) => type.startsWith('application/x.pdnd-'))
+        // Only allow dropping items of the specified types.
+        const sourceType = extractExternalDragType(source)
+        const isAllowedDragType = types.some(({ type }) => type === sourceType)
+        return isAllowedDragType
       },
       getIsSticky: () => true,
       onDrag: ({ self }) => {
@@ -490,7 +520,8 @@ const useDropTargetForElements = <TItemData extends DragData>({
           return
         }
 
-        const rawSourceData = source.getStringData('application/x.pdnd-post')
+        const sourceType = extractExternalDragType(source)
+        const rawSourceData = source.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
         if (!rawSourceData) {
           return
         }

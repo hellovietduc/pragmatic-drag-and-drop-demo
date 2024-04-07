@@ -36,11 +36,9 @@ const { useNativeDragPreview } = useNativeDragPreviewState()
 const rootEl = ref<HTMLElement>()
 const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
 const itemDataForExternal = computed<ItemDataForExternal>(() => ({
-  nativeData: {
-    'text/plain': `Post: ${post.value.subject}`,
-    'text/html': `<h1>${post.value.subject}</h1><img src="${post.value.attachment}" alt="Attachment" />`
-  },
-  customData: post.value
+  text: `Post: ${post.value.subject}`,
+  html: `<h1>${post.value.subject}</h1><img src="${post.value.attachment}" alt="Attachment" />`,
+  dragData: post.value
 }))
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
