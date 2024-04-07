@@ -1,6 +1,7 @@
-import { groupBy, keyBy, mapValues, sortBy, uniqueId } from 'lodash-es'
+import { groupBy, keyBy, mapValues, sortBy } from 'lodash-es'
 import { computed, ref, watch } from 'vue'
 import { createSharedComposable, useLocalStorage } from '@vueuse/core'
+import { nanoid } from 'nanoid'
 
 export interface Section {
   id: string
@@ -18,7 +19,7 @@ export interface Post {
 
 const generateSections = (count: number): Section[] => {
   return Array.from({ length: count }, (_, index) => {
-    const id = uniqueId('section')
+    const id = nanoid(5)
     return {
       id,
       title: `Section: ${id}`,
@@ -29,7 +30,7 @@ const generateSections = (count: number): Section[] => {
 
 const generatePosts = (count: number, sectionId: string, sectionIndex: number): Post[] => {
   return Array.from({ length: count }, (_, index) => {
-    const id = uniqueId('post')
+    const id = nanoid(5)
     return {
       id,
       sectionId,
