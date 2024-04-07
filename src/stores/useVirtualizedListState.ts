@@ -1,7 +1,7 @@
-import { createSharedComposable } from '@vueuse/core'
-import { ref } from 'vue'
+import { createSharedComposable, useLocalStorage } from '@vueuse/core'
 
 export const useVirtualizedListState = createSharedComposable(() => {
-  const isVirtualized = ref(false)
+  const isVirtualized = useLocalStorage('isVirtualized', false)
+
   return { isVirtualized }
 })
