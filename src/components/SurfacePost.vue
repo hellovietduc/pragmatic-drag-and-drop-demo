@@ -34,7 +34,7 @@ const rootEl = ref<HTMLElement>()
 const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
-const { itemState } = useDraggableElement({
+const { isDragging: isDraggingThisPost } = useDraggableElement({
   elementRef: rootEl,
   type: 'post',
   itemData,
@@ -67,7 +67,6 @@ const { dragIndicatorEdge } = useDropTargetForElements({
   }
 })
 
-const isDraggingThisPost = computed(() => itemState.value.type === 'dragging')
 const xDragIndicator = computed(
   () => dragIndicatorEdge.value && isVerticalEdge(dragIndicatorEdge.value)
 )

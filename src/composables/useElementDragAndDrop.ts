@@ -69,15 +69,6 @@ const extractPointerPosition = (location: DragLocationHistory): Position => {
 
 const noOp = () => {}
 
-type ItemState =
-  | { type: 'idle' }
-  | { type: 'preview'; container: HTMLElement }
-  | { type: 'dragging' }
-  | { type: 'is-over'; closestEdge: Edge | null }
-
-const IDLE_STATE: ItemState = { type: 'idle' }
-const DRAGGING_STATE: ItemState = { type: 'dragging' }
-
 type ComponentProps = Record<string, unknown>
 
 const renderNativeDragPreview = <TProps extends ComponentProps>(
@@ -236,7 +227,7 @@ const useDraggableElement = <
    */
   onDrop?: () => void
 }) => {
-  const itemState = ref<ItemState>(IDLE_STATE)
+  const isDragging = ref(false)
 
   const data = computed(() => makeItemData({ ...itemData.value, type }))
 
@@ -265,7 +256,7 @@ const useDraggableElement = <
         }
       },
       onDragStart: ({ location }) => {
-        itemState.value = DRAGGING_STATE
+        isDragging.value = true
         if (!useNativeDragPreview && dragPreviewComponent && elementRef.value) {
           useRenderCustomDragPreview().render(
             elementRef.value,
@@ -286,7 +277,7 @@ const useDraggableElement = <
       onDrop: () => {
         // `onDrop` may not fired if the element is destroyed in a virtualized list.
         // DO NOT handle reordering logic here.
-        itemState.value = IDLE_STATE
+        isDragging.value = false
         useRenderCustomDragPreview().unmount()
         preventUnhandled.stop()
         onDrop?.()
@@ -305,7 +296,7 @@ const useDraggableElement = <
   })
 
   return {
-    itemState
+    isDragging
   }
 }
 
@@ -483,4 +474,4 @@ const useDragAndDropAutoScroll = ({
 }
 
 export { isVerticalEdge, useDraggableElement, useDropTargetForElements, useDragAndDropAutoScroll }
-export type { DragData, ItemState, ItemData, OnDropPayload }
+export type { DragData, ItemData, OnDropPayload }

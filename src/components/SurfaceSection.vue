@@ -46,7 +46,7 @@ const scrollContainer = ref<HTMLElement>()
 const itemData = computed<SectionDragData>(() => ({ sectionId: props.id }))
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
-const { itemState } = useDraggableElement({
+const { isDragging: isDraggingThisSection } = useDraggableElement({
   elementRef: rootEl,
   type: 'section',
   itemData,
@@ -94,7 +94,6 @@ const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
 
 useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer, type: 'post' })
 
-const isDragging = computed(() => itemState.value.type === 'dragging')
 const xDragIndicator = computed(
   () => dragIndicatorEdge.value && !isVerticalEdge(dragIndicatorEdge.value)
 )
@@ -104,7 +103,14 @@ const xDragIndicator = computed(
   <div class="relative h-full">
     <section
       ref="rootEl"
-      :class="['relative', 'flex', 'flex-col', 'w-[246px]', 'h-full', isDragging && 'opacity-30']"
+      :class="[
+        'relative',
+        'flex',
+        'flex-col',
+        'w-[246px]',
+        'h-full',
+        isDraggingThisSection && 'opacity-30'
+      ]"
     >
       <!-- Section title -->
       <h1
