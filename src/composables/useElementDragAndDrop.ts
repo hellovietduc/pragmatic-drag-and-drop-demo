@@ -4,6 +4,7 @@ import {
   dropTargetForElements,
   type ElementDragPayload
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine'
 import type {
   CleanupFn,
   DragLocationHistory,
@@ -22,6 +23,7 @@ import {
   computed,
   type ComponentPublicInstance
 } from 'vue'
+import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled'
@@ -33,6 +35,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { keyBy } from 'lodash-es'
 import { createSharedComposable } from '@vueuse/core'
+import type { NativeMediaType } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types'
 
 const isVerticalEdge = (edge: Edge): boolean => {
   return edge === 'top' || edge === 'bottom'
@@ -46,6 +49,10 @@ const ITEM_KEY = Symbol('item')
 type ItemData = DragData & {
   [ITEM_KEY]: true
   type: string
+}
+type ItemDataForExternal = {
+  nativeData?: { [K in NativeMediaType]?: string }
+  customData?: DragData
 }
 
 const isItemData = (data: DragData): data is ItemData => {
@@ -178,6 +185,7 @@ const useDraggableElement = <
   elementRef,
   type,
   itemData,
+  itemDataForExternal,
   dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
@@ -197,6 +205,10 @@ const useDraggableElement = <
    * Data to attach with this draggable element.
    */
   itemData: Ref<TItemData>
+  /**
+   * Data to attach with this draggable element when dropped on an external drop target.
+   */
+  itemDataForExternal?: Ref<ItemDataForExternal>
   /**
    * Element to be used as a drag handle.
    * @default elementRef
@@ -229,14 +241,23 @@ const useDraggableElement = <
 }) => {
   const isDragging = ref(false)
 
-  const data = computed(() => makeItemData({ ...itemData.value, type }))
+  const internalData = computed(() => makeItemData({ ...itemData.value, type }))
+  const externalData = computed(() => {
+    const { customData, nativeData } = itemDataForExternal?.value ?? {}
+    return {
+      ...(nativeData ?? {}),
+      [`application/x.pdnd-${type}`]: customData && JSON.stringify(customData),
+      ...(customData ?? {})
+    }
+  })
 
   const makeElementDraggable = () => {
     if (!elementRef.value) return noOp
     return draggable({
       element: elementRef.value,
       dragHandle: dragHandleElementRef?.value,
-      getInitialData: () => data.value,
+      getInitialData: () => internalData.value,
+      getInitialDataForExternal: () => externalData.value,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         if (!dragPreviewComponent) return
         if (!useNativeDragPreview && elementRef.value) {
@@ -305,6 +326,11 @@ type OnDropPayload<TItemData extends DragData> = {
   targetData: ItemData & TItemData
 }
 
+type OnDropFromExternalPayload<TItemData extends DragData> = {
+  sourceData: DragData
+  targetData: ItemData & TItemData
+}
+
 /**
  * Makes an element a drop target for other draggable elements.
  */
@@ -314,7 +340,8 @@ const useDropTargetForElements = <TItemData extends DragData>({
   itemData,
   ignoresInnerDrops = false,
   canDrop,
-  onDrop
+  onDrop,
+  onDropFromExternal
 }: {
   /**
    * Element to be made drop target.
@@ -340,6 +367,7 @@ const useDropTargetForElements = <TItemData extends DragData>({
    * Finished a drag and drop operation.
    */
   onDrop?: (payload: OnDropPayload<TItemData>) => void
+  onDropFromExternal?: (payload: OnDropFromExternalPayload<TItemData>) => void
 }) => {
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
@@ -420,10 +448,69 @@ const useDropTargetForElements = <TItemData extends DragData>({
     })
   }
 
+  const setUpDropTargetForExternal = () => {
+    if (!elementRef.value) return noOp
+    return dropTargetForExternal({
+      element: elementRef.value,
+      getData: ({ source, input }) => {
+        const sourceType = source.types
+          .find((type) => type.startsWith('application/x.pdnd-'))
+          ?.replace('application/x.pdnd-', '')
+        if (!sourceType) return {}
+        if (!elementRef.value) return dataByType.value[sourceType]
+        // Attach the closest edge to the pointer on the drop target.
+        return attachClosestEdge(dataByType.value[sourceType], {
+          element: elementRef.value,
+          input,
+          allowedEdges: allowedEdgesByType[sourceType].allowedEdges
+        })
+      },
+      canDrop: ({ source }) => {
+        return source.types.some((type) => type.startsWith('application/x.pdnd-'))
+      },
+      getIsSticky: () => true,
+      onDrag: ({ self }) => {
+        isDraggingOver.value = true
+        dragIndicatorEdge.value = extractClosestEdge(self.data)
+      },
+      onDragLeave() {
+        isDraggingOver.value = false
+        dragIndicatorEdge.value = null
+      },
+      onDrop: ({ self, source, location }) => {
+        isDraggingOver.value = false
+        dragIndicatorEdge.value = null
+
+        // If there are nested drop targets all of them will have
+        // their `onDrop` callbacks executed.
+        // Use `ignoresInnerDrops` to skip handling nested drops
+        // from an outer drop target.
+        const target = location.current.dropTargets[0]
+        if (!target || (ignoresInnerDrops && self.element !== target.element)) {
+          return
+        }
+
+        const rawSourceData = source.getStringData('application/x.pdnd-post')
+        if (!rawSourceData) {
+          return
+        }
+
+        const sourceData = JSON.parse(rawSourceData) as DragData
+        const targetData = extractItemData(target) as ItemData & TItemData
+
+        if (!isItemData(targetData)) {
+          return
+        }
+
+        onDropFromExternal?.({ sourceData, targetData })
+      }
+    })
+  }
+
   let cleanUp: CleanupFn
 
   onMounted(() => {
-    cleanUp = setUpDropTarget()
+    cleanUp = combine(setUpDropTarget(), setUpDropTargetForExternal())
   })
 
   onBeforeUnmount(() => {
@@ -474,4 +561,4 @@ const useDragAndDropAutoScroll = ({
 }
 
 export { isVerticalEdge, useDraggableElement, useDropTargetForElements, useDragAndDropAutoScroll }
-export type { DragData, ItemData, OnDropPayload }
+export type { DragData, ItemData, OnDropPayload, ItemDataForExternal }

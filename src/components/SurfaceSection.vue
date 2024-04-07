@@ -10,6 +10,7 @@ import {
   useDropTargetForElements,
   useDragAndDropAutoScroll,
   type OnDropPayload,
+  type OnDropFromExternalPayload,
   isVerticalEdge
 } from '@/composables/useElementDragAndDrop'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
@@ -30,14 +31,31 @@ const emit = defineEmits<{
 const { isVirtualized } = useVirtualizedListState()
 const { useNativeDragPreview } = useNativeDragPreviewState()
 
-const { sectionById, postsBySectionId } = useDummyData()
+const { sectionById, postsBySectionId, createPost, addPost, doesPostExist } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
-const { reorderPost } = usePostReorder()
+const { calculateSortIndex, reorderPost } = usePostReorder()
 
 const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
   console.log(`🚀 ~ dragged post from`, sourceData, `to`, targetData)
   reorderPost(sourceData, targetData)
+}
+
+const addPostFromExternal = ({
+  sourceData,
+  targetData
+}: OnDropFromExternalPayload<PostDragData>) => {
+  console.log('🚀 dragged external post from', sourceData, 'to', targetData)
+  const newPost = createPost({
+    ...sourceData,
+    sectionId: targetData.sectionId,
+    sortIndex: calculateSortIndex(targetData) ?? sourceData.sortIndex
+  })
+  if (doesPostExist(newPost.id)) {
+    window.alert(`Post ${newPost.id} already exists`)
+    return
+  }
+  addPost(newPost)
 }
 
 const rootEl = ref<HTMLElement>()
@@ -75,6 +93,19 @@ const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
   onDrop: (payload) => {
     if (payload.sourceData.type === 'post' && payload.targetData.postId === undefined) {
       handlePostReorder(payload as OnDropPayload<PostDragData>)
+
+      raf(async () => {
+        const movedElement = document.querySelector<HTMLElement>(
+          `[data-post-id="${payload.sourceData.postId}"]`
+        )
+        if (!movedElement) return
+        movedElement.scrollIntoView({
+          block: 'center',
+          inline: 'center'
+        })
+        flashElement(movedElement, '#9466e8', 500)
+      })
+
       return
     }
     if (payload.sourceData.type === 'section') {
@@ -89,6 +120,21 @@ const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
         flashElement(movedElement, '#9466e8', 500)
       })
     }
+  },
+  onDropFromExternal: (payload) => {
+    addPostFromExternal(payload)
+
+    raf(async () => {
+      const movedElement = document.querySelector<HTMLElement>(
+        `[data-post-id="${payload.sourceData.id}"]`
+      )
+      if (!movedElement) return
+      movedElement.scrollIntoView({
+        block: 'center',
+        inline: 'center'
+      })
+      flashElement(movedElement, '#9466e8', 500)
+    })
   }
 })
 
@@ -144,6 +190,7 @@ const xDragIndicator = computed(
           :section-id="id"
           class="z-10 last:mb-4"
           @reorder="handlePostReorder"
+          @add-from-external="addPostFromExternal"
         />
       </div>
       <DragOverlay v-if="isDraggingOver && !xDragIndicator" class="absolute inset-x-0 -inset-y-2" />

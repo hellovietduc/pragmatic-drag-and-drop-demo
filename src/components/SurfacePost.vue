@@ -8,8 +8,10 @@ import { useDraggingState } from '@/stores/useDraggingState'
 import {
   isVerticalEdge,
   type OnDropPayload,
+  type OnDropFromExternalPayload,
   useDraggableElement,
-  useDropTargetForElements
+  useDropTargetForElements,
+  type ItemDataForExternal
 } from '@/composables/useElementDragAndDrop'
 import type { PostDragData } from '@/composables/usePostReorder'
 import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
@@ -22,6 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'reorder', payload: OnDropPayload<PostDragData>): void
+  (e: 'add-from-external', payload: OnDropFromExternalPayload<PostDragData>): void
 }>()
 
 const { postById } = useDummyData()
@@ -32,12 +35,20 @@ const { useNativeDragPreview } = useNativeDragPreviewState()
 
 const rootEl = ref<HTMLElement>()
 const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
+const itemDataForExternal = computed<ItemDataForExternal>(() => ({
+  nativeData: {
+    'text/plain': `Post: ${post.value.subject}`,
+    'text/html': `<h1>${post.value.subject}</h1><img src="${post.value.attachment}" alt="Attachment" />`
+  },
+  customData: post.value
+}))
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
 const { isDragging: isDraggingThisPost } = useDraggableElement({
   elementRef: rootEl,
   type: 'post',
   itemData,
+  itemDataForExternal,
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps,
   useNativeDragPreview: useNativeDragPreview.value,
@@ -56,6 +67,21 @@ const { dragIndicatorEdge } = useDropTargetForElements({
     raf(async () => {
       const movedElement = document.querySelector<HTMLElement>(
         `[data-post-id="${payload.sourceData.postId}"]`
+      )
+      if (!movedElement) return
+      movedElement.scrollIntoView({
+        block: 'center',
+        inline: 'center'
+      })
+      flashElement(movedElement, '#9466e8', 500)
+    })
+  },
+  onDropFromExternal: (payload) => {
+    emit('add-from-external', payload)
+
+    raf(async () => {
+      const movedElement = document.querySelector<HTMLElement>(
+        `[data-post-id="${payload.sourceData.id}"]`
       )
       if (!movedElement) return
       movedElement.scrollIntoView({

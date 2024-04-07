@@ -1,4 +1,4 @@
-import { groupBy, keyBy, mapValues, sortBy } from 'lodash-es'
+import { groupBy, keyBy, mapValues, sortBy, uniqueId } from 'lodash-es'
 import { computed, ref, watch } from 'vue'
 import { createSharedComposable, useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
@@ -48,6 +48,24 @@ export const useDummyData = createSharedComposable(() => {
   const sections = ref<Section[]>([])
   const posts = ref<Post[]>([])
 
+  const createPost = (post: Pick<Post, 'sectionId'> & Partial<Post>): Post => {
+    return {
+      id: post.id ?? nanoid(5),
+      sectionId: post.sectionId,
+      subject: post.subject ?? `New post: ${uniqueId()}`,
+      attachment: post.attachment ?? `https://padlet.net/monsters/${posts.value.length}.png`,
+      sortIndex: post.sortIndex ?? 0
+    }
+  }
+
+  const addPost = (post: Post) => {
+    posts.value.push(post)
+  }
+
+  const doesPostExist = (postId: string) => {
+    return posts.value.some((post) => post.id === postId)
+  }
+
   setTimeout(() => {
     watch(
       sectionsCount,
@@ -89,6 +107,10 @@ export const useDummyData = createSharedComposable(() => {
     postById,
 
     sortedSections,
-    postsBySectionId
+    postsBySectionId,
+
+    createPost,
+    addPost,
+    doesPostExist
   }
 })
