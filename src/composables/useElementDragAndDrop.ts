@@ -62,8 +62,8 @@ const makeItemData = <TItemData>(itemData: TItemData & { type: ItemData['type'] 
 
 const extractPointerPosition = (location: DragLocationHistory): Position => {
   return {
-    x: location.current.input.pageX,
-    y: location.current.input.pageY
+    x: location.current.input.clientX,
+    y: location.current.input.clientY
   }
 }
 
