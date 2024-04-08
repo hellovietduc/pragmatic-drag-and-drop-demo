@@ -1,4 +1,7 @@
-import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
+import {
+  type Edge,
+  extractClosestEdge
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import type {
   ExternalDragPayload,
   NativeMediaType
@@ -10,15 +13,11 @@ import type {
   Position
 } from '@atlaskit/pragmatic-drag-and-drop/types'
 
-const isVerticalEdge = (edge: Edge): boolean => {
-  return edge === 'top' || edge === 'bottom'
-}
-
-type DragData = Record<string | symbol, unknown>
-
 /** Symbol to identify events made by Pragmatic DnD. */
 const ITEM_KEY = Symbol('item')
 const EXTERNAL_DRAG_TYPE_PREFIX = 'application/x.pdnd-'
+
+type DragData = Record<string | symbol, unknown>
 
 type ItemData = DragData & {
   [ITEM_KEY]: true
@@ -29,6 +28,19 @@ type ItemDataForExternal = {
   text?: string
   html?: string
   dragData?: DragData
+}
+
+type RelativePosition = 'before' | 'after'
+
+type CanDropPayload<TData> = {
+  sourceData: ItemData & TData
+  targetData: ItemData & TData
+}
+
+type OnDropPayload<TData> = {
+  sourceData: ItemData & TData
+  targetData: ItemData & TData
+  relativePositionToTarget: RelativePosition
 }
 
 const isItemData = (data: DragData): data is ItemData => {
@@ -67,15 +79,34 @@ const extractPointerPosition = (location: DragLocationHistory): Position => {
   }
 }
 
+const isVerticalEdge = (edge: Edge): boolean => {
+  return edge === 'top' || edge === 'bottom'
+}
+
+const extractRelativePositionToTarget = (target: DragData): RelativePosition | null => {
+  const closestEdge = extractClosestEdge(target)
+  if (!closestEdge) return null
+  if (closestEdge === 'top' || closestEdge === 'left') return 'before'
+  return 'after'
+}
+
 export {
   ITEM_KEY,
   EXTERNAL_DRAG_TYPE_PREFIX,
-  isVerticalEdge,
   isItemData,
   extractItemData,
   makeItemData,
   extractExternalDragType,
   makeItemDataForExternal,
   extractPointerPosition,
+  isVerticalEdge,
+  extractRelativePositionToTarget
 }
-export type { DragData, ItemData, ItemDataForExternal }
+export type {
+  DragData,
+  ItemData,
+  ItemDataForExternal,
+  RelativePosition,
+  CanDropPayload,
+  OnDropPayload
+}
