@@ -37,8 +37,19 @@ type CanDropPayload<TData> = {
   targetData: ItemData & TData
 }
 
+type CanDropExternalPayload<TData> = {
+  sourceData: ItemData
+  targetData: ItemData & TData
+}
+
 type OnDropPayload<TData> = {
   sourceData: ItemData & TData
+  targetData: ItemData & TData
+  relativePositionToTarget: RelativePosition
+}
+
+type OnDropExternalPayload<TData> = {
+  sourceData: ItemData
   targetData: ItemData & TData
   relativePositionToTarget: RelativePosition
 }
@@ -59,6 +70,14 @@ const extractExternalDragType = (source: ExternalDragPayload): string | undefine
   return source.types
     .find((type) => type.startsWith(EXTERNAL_DRAG_TYPE_PREFIX))
     ?.replace(EXTERNAL_DRAG_TYPE_PREFIX, '')
+}
+
+const extractItemDataFromExternal = (source: ExternalDragPayload): ItemData | null => {
+  const sourceType = extractExternalDragType(source)
+  if (!sourceType) return null
+  const rawData = source.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
+  if (!rawData) return null
+  return makeItemData({ ...JSON.parse(rawData), type: sourceType })
 }
 
 const makeItemDataForExternal = (
@@ -97,6 +116,7 @@ export {
   extractItemData,
   makeItemData,
   extractExternalDragType,
+  extractItemDataFromExternal,
   makeItemDataForExternal,
   extractPointerPosition,
   isVerticalEdge,
@@ -108,5 +128,7 @@ export type {
   ItemDataForExternal,
   RelativePosition,
   CanDropPayload,
-  OnDropPayload
+  CanDropExternalPayload,
+  OnDropPayload,
+  OnDropExternalPayload
 }

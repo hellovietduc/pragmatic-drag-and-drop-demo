@@ -1,11 +1,14 @@
 import {
-  EXTERNAL_DRAG_TYPE_PREFIX,
   extractExternalDragType,
   extractItemData,
+  extractItemDataFromExternal,
+  extractRelativePositionToTarget,
   isItemData,
   makeItemData,
+  type CanDropExternalPayload,
   type DragData,
-  type ItemData
+  type ItemData,
+  type OnDropExternalPayload
 } from '@/pragmatic-drag-and-drop/helpers'
 import {
   attachClosestEdge,
@@ -17,27 +20,16 @@ import type { CleanupFn } from '@atlaskit/pragmatic-drag-and-drop/types'
 import { keyBy } from 'lodash-es'
 import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 
-type OnDropPayload<TItemData extends DragData> = {
-  sourceData: ItemData & TItemData
-  targetData: ItemData & TItemData
-}
-
-type OnDropFromExternalPayload<TItemData extends DragData> = {
-  sourceData: DragData
-  targetData: ItemData & TItemData
-}
-
 /**
- * Makes an element a drop target for other draggable elements.
+ * Makes an element a drop target for external sources.
  */
-export const useDropTargetForExternal = <TItemData extends DragData>({
+export const useDropTargetForExternal = <TData extends DragData>({
   elementRef,
   types,
-  itemData,
-  ignoresInnerDrops = false,
+  data,
+  ignoresNestedDrops = false,
   canDrop,
-  onDrop,
-  onDropFromExternal
+  onDrop
 }: {
   /**
    * Element to be made drop target.
@@ -50,20 +42,19 @@ export const useDropTargetForExternal = <TItemData extends DragData>({
   /**
    * Data to attach with this drop target.
    */
-  itemData: Ref<TItemData>
+  data: Ref<TData>
   /**
    * Whether to ignore drop events from inner drop targets.
    */
-  ignoresInnerDrops?: boolean
+  ignoresNestedDrops?: boolean
   /**
    * Whether the item can be dropped on the target.
    */
-  canDrop?: (payload: { sourceData: ItemData; targetData: ItemData }) => boolean
+  canDrop?: (payload: CanDropExternalPayload<TData>) => boolean
   /**
    * Finished a drag and drop operation.
    */
-  onDrop?: (payload: OnDropPayload<TItemData>) => void
-  onDropFromExternal?: (payload: OnDropFromExternalPayload<TItemData>) => void
+  onDrop?: (payload: OnDropExternalPayload<TData>) => void
 }) => {
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
@@ -78,35 +69,49 @@ export const useDropTargetForExternal = <TItemData extends DragData>({
     'type'
   )
 
-  const dataByType = computed(() =>
+  const itemDataByType = computed(() =>
     keyBy(
-      types.map(({ type }) => makeItemData({ ...itemData.value, type })),
+      types.map(({ type }) => makeItemData({ ...data.value, type })),
       'type'
     )
   )
 
-  const setUpDropTargetForExternal = () => {
+  const makeElementDropTarget = () => {
     if (!elementRef.value) return () => {}
     return dropTargetForExternal({
       element: elementRef.value,
       getData: ({ source, input }) => {
         const sourceType = extractExternalDragType(source)
+        // If we can't identify the type, it's not a drag source we should handle.
+        // This will eventually be cancelled by the `canDrop` check.
         if (!sourceType) return {}
-        if (!elementRef.value) return dataByType.value[sourceType]
+        if (!elementRef.value) return itemDataByType.value[sourceType]
         // Attach the closest edge to the pointer on the drop target.
-        return attachClosestEdge(dataByType.value[sourceType], {
+        return attachClosestEdge(itemDataByType.value[sourceType], {
           element: elementRef.value,
           input,
           allowedEdges: allowedEdgesByType[sourceType].allowedEdges
         })
       },
+      getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       canDrop: ({ source }) => {
-        // Only allow dropping items of the specified types.
+        // Only allow dropping draggable elements of the specified types.
         const sourceType = extractExternalDragType(source)
+        if (!sourceType) return false
         const isAllowedDragType = types.some(({ type }) => type === sourceType)
-        return isAllowedDragType
+        if (!isAllowedDragType) return false
+        if (canDrop) {
+          // We enforce external drag sources to have data attached to them
+          // so we can check if they can be dropped on the target.
+          const sourceData = extractItemDataFromExternal(source)
+          if (!sourceData) return false
+          return canDrop({
+            sourceData,
+            targetData: itemDataByType.value[sourceType] as ItemData & TData
+          })
+        }
+        return true
       },
-      getIsSticky: () => true,
       onDrag: ({ self }) => {
         isDraggingOver.value = true
         dragIndicatorEdge.value = extractClosestEdge(self.data)
@@ -121,27 +126,26 @@ export const useDropTargetForExternal = <TItemData extends DragData>({
 
         // If there are nested drop targets all of them will have
         // their `onDrop` callbacks executed.
-        // Use `ignoresInnerDrops` to skip handling nested drops
+        // Use `ignoresNestedDrops` to skip handling nested drops
         // from an outer drop target.
         const target = location.current.dropTargets[0]
-        if (!target || (ignoresInnerDrops && self.element !== target.element)) {
+        if (!target || (ignoresNestedDrops && self.element !== target.element)) {
           return
         }
 
-        const sourceType = extractExternalDragType(source)
-        const rawSourceData = source.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
-        if (!rawSourceData) {
+        const sourceData = extractItemDataFromExternal(source)
+        const targetData = extractItemData(target) as ItemData & TData
+
+        if (!sourceData || !isItemData(sourceData) || !isItemData(targetData)) {
           return
         }
 
-        const sourceData = JSON.parse(rawSourceData) as DragData
-        const targetData = extractItemData(target) as ItemData & TItemData
-
-        if (!isItemData(targetData)) {
+        const relativePositionToTarget = extractRelativePositionToTarget(targetData)
+        if (!relativePositionToTarget) {
           return
         }
 
-        onDropFromExternal?.({ sourceData, targetData })
+        onDrop?.({ sourceData, targetData, relativePositionToTarget })
       }
     })
   }
@@ -149,7 +153,7 @@ export const useDropTargetForExternal = <TItemData extends DragData>({
   let cleanUp: CleanupFn
 
   onMounted(() => {
-    cleanUp = setUpDropTargetForExternal()
+    cleanUp = makeElementDropTarget()
   })
 
   onBeforeUnmount(() => {
