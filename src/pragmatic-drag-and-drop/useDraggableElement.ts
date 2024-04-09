@@ -5,7 +5,7 @@ import {
   type ItemData,
   type DragDataForExternal
 } from '@/pragmatic-drag-and-drop/helpers'
-import { renderNativeDragPreview, type ComponentProps } from '@/pragmatic-drag-and-drop/renderers'
+import { renderNativeDragPreview, type ComponentProps } from '@/pragmatic-drag-and-drop/renderer'
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
