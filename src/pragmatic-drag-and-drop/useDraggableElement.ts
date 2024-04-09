@@ -34,7 +34,7 @@ export const useDraggableElement = <
    */
   elementRef: Ref<HTMLElement | undefined>
   /**
-   * Used to differentiate multiple types of drags on a page.
+   * Used to differentiate multiple types of drag sources on a page.
    */
   type: ItemData['type']
   /**

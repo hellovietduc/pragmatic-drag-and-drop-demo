@@ -38,11 +38,12 @@ const handlePostReorder = ({
   targetData,
   relativePositionToTarget
 }: OnDropPayload<Post>) => {
-  console.log(`🚀 ~ dragged post from`, sourceData, `to`, targetData)
+  console.log(`🚀 ~ reordered post`, sourceData, `to`, targetData)
   reorderPost(targetData, sourceData, relativePositionToTarget)
 }
 
 const movePostToSection = ({ movingPost, section }: { movingPost: Post; section: Section }) => {
+  console.log(`🚀 ~ moved post`, movingPost, `to`, section)
   const post = postById.value[movingPost.id]
   if (!post) return
   post.sectionId = section.id
@@ -53,11 +54,11 @@ const addPostFromExternal = ({
   targetData,
   relativePositionToTarget
 }: OnDropExternalPayload<Post>) => {
-  console.log('🚀 dragged external post from', sourceData, 'to', targetData)
+  console.log('🚀 dragged external post', sourceData, 'to', targetData)
   const sourcePost = sourceData as unknown as Post
   const newPost = createPost({
     ...sourcePost,
-    sectionId: targetData.sectionId,
+    sectionId: targetData.id,
     sortIndex: calculateNewSortIndex(targetData, relativePositionToTarget) ?? sourcePost.sortIndex
   })
   if (doesPostExist(newPost.id)) {
@@ -84,7 +85,8 @@ const { isDragging: isDraggingThisSection } = useDraggableElement({
 const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragIndicatorEdge } =
   useDropTargetForElements({
     elementRef: rootEl,
-    types: [
+    type: 'section',
+    acceptedDragTypes: [
       {
         type: 'section',
         axis: 'horizontal'
@@ -113,7 +115,8 @@ const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragI
 const { isDraggingOver: externalIsDraggingOver, dragIndicatorEdge: externalDragIndicatorEdge } =
   useDropTargetForExternal({
     elementRef: rootEl,
-    types: [
+    type: 'section',
+    acceptedDragTypes: [
       {
         type: 'post',
         axis: 'vertical'

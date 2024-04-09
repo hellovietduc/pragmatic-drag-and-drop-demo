@@ -52,7 +52,8 @@ const { isDragging: isDraggingThisPost } = useDraggableElement({
 
 const { dragIndicatorEdge: internalDragIndicatorEdge } = useDropTargetForElements({
   elementRef: rootEl,
-  types: [{ type: 'post', axis: 'vertical' }],
+  type: 'post',
+  acceptedDragTypes: [{ type: 'post', axis: 'vertical' }],
   data: post,
   onDrop: (payload) => {
     isDraggingPost.value = false
@@ -63,7 +64,8 @@ const { dragIndicatorEdge: internalDragIndicatorEdge } = useDropTargetForElement
 
 const { dragIndicatorEdge: externalDragIndicatorEdge } = useDropTargetForExternal({
   elementRef: rootEl,
-  types: [{ type: 'post', axis: 'vertical' }],
+  type: 'post',
+  acceptedDragTypes: [{ type: 'post', axis: 'vertical' }],
   data: post,
   onDrop: (payload) => {
     isDraggingPost.value = false

@@ -23,7 +23,8 @@ import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
  */
 export const useDropTargetForElements = <TData extends DragData>({
   elementRef,
-  types,
+  type,
+  acceptedDragTypes,
   data,
   ignoresNestedDrops = false,
   canDrop,
@@ -34,9 +35,13 @@ export const useDropTargetForElements = <TData extends DragData>({
    */
   elementRef: Ref<HTMLElement | undefined>
   /**
+   * Used to differentiate multiple types of drop targets on a page.
+   */
+  type: ItemData['type']
+  /**
    * Types of draggable elements that can be dropped on this target.
    */
-  types: { type: ItemData['type']; axis: 'vertical' | 'horizontal' }[]
+  acceptedDragTypes: { type: ItemData['type']; axis: 'vertical' | 'horizontal' }[]
   /**
    * Data to attach with this drop target.
    */
@@ -57,8 +62,9 @@ export const useDropTargetForElements = <TData extends DragData>({
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
+  const itemData = computed(() => makeItemData({ ...data.value, type }))
   const allowedEdgesByType = keyBy(
-    types.map(({ type, axis }) => {
+    acceptedDragTypes.map(({ type, axis }) => {
       return {
         type,
         allowedEdges: axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
@@ -67,22 +73,15 @@ export const useDropTargetForElements = <TData extends DragData>({
     'type'
   )
 
-  const itemDataByType = computed(() =>
-    keyBy(
-      types.map(({ type }) => makeItemData({ ...data.value, type })),
-      'type'
-    )
-  )
-
   const makeElementDropTarget = () => {
     if (!elementRef.value) return () => {}
     return dropTargetForElements({
       element: elementRef.value,
       getData: ({ source, input }) => {
         const sourceType = extractItemData(source).type
-        if (!elementRef.value) return itemDataByType.value[sourceType]
+        if (!elementRef.value) return itemData.value
         // Attach the closest edge to the pointer on the drop target.
-        return attachClosestEdge(itemDataByType.value[sourceType], {
+        return attachClosestEdge(itemData.value, {
           element: elementRef.value,
           input,
           allowedEdges: allowedEdgesByType[sourceType].allowedEdges
@@ -92,11 +91,11 @@ export const useDropTargetForElements = <TData extends DragData>({
       canDrop: ({ source }) => {
         // Only allow dropping draggable elements of the specified types.
         const sourceType = extractItemData(source).type
-        const isAllowedDragType = types.some(({ type }) => type === sourceType)
+        const isAllowedDragType = acceptedDragTypes.some(({ type }) => type === sourceType)
         return isAllowedDragType && canDrop
           ? canDrop({
               sourceData: extractItemData(source) as ItemData & TData,
-              targetData: itemDataByType.value[sourceType] as ItemData & TData
+              targetData: itemData.value as ItemData & TData
             })
           : true
       },

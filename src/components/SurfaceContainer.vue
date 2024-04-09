@@ -13,6 +13,7 @@ const handleSectionReorder = ({
   targetData,
   relativePositionToTarget
 }: OnDropPayload<Section>) => {
+  console.log(`🚀 ~ reordered section`, sourceData, `to`, targetData)
   reorderSection(targetData, sourceData, relativePositionToTarget)
 }
 </script>
