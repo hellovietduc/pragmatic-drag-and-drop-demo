@@ -1,47 +1,47 @@
-import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { useDummyData, type Section } from '@/stores/useDummyData'
 import { getSortIndexBetweenItems } from '@/bits/reorder'
-import type { ItemData } from '@/composables/useElementDragAndDrop'
+import type { RelativePosition } from '@/pragmatic-drag-and-drop/helpers'
 
 export type SectionDragData = { sectionId: string }
 
 export const useSectionReorder = () => {
   const { sortedSections } = useDummyData()
 
-  const reorderSection = (
-    source: SectionDragData & ItemData,
-    target: SectionDragData & ItemData
-  ) => {
-    const sourceIndex = sortedSections.value.findIndex((section) => section.id === source.sectionId)
-    const targetIndex = sortedSections.value.findIndex((section) => section.id === target.sectionId)
-    const isValidSource = sourceIndex >= 0 && sourceIndex < sortedSections.value.length
-    const isValidTarget = targetIndex >= 0 && targetIndex < sortedSections.value.length
-
-    if (!isValidSource || !isValidTarget) {
-      return
+  const calculateNewSortIndex = (
+    anchorSection: Section,
+    newSectionRelativePosition: RelativePosition
+  ): number | null => {
+    const anchorSectionIndex =
+      sortedSections.value?.findIndex((post) => post.id === anchorSection.id) ?? -1
+    if (anchorSectionIndex === -1) {
+      return null
     }
-
-    const closestEdgeOfTarget = extractClosestEdge(target)
-    if (!closestEdgeOfTarget) return
 
     let prevSection: Section
     let nextSection: Section
-    if (closestEdgeOfTarget === 'left') {
-      prevSection = sortedSections.value[targetIndex - 1]
-      nextSection = sortedSections.value[targetIndex]
+    if (newSectionRelativePosition === 'before') {
+      prevSection = sortedSections.value[anchorSectionIndex - 1]
+      nextSection = sortedSections.value[anchorSectionIndex]
     } else {
-      prevSection = sortedSections.value[targetIndex]
-      nextSection = sortedSections.value[targetIndex + 1]
+      prevSection = sortedSections.value[anchorSectionIndex]
+      nextSection = sortedSections.value[anchorSectionIndex + 1]
     }
 
-    const newSortIndex = getSortIndexBetweenItems(prevSection, nextSection)
-    if (!newSortIndex) return
+    return getSortIndexBetweenItems(prevSection, nextSection)
+  }
 
-    const sourceSection = sortedSections.value[sourceIndex]
-    sourceSection.sortIndex = newSortIndex
+  const reorderSection = (
+    anchorSection: Section,
+    movingSection: Section,
+    newSectionRelativePosition: RelativePosition
+  ) => {
+    const newSortIndex = calculateNewSortIndex(anchorSection, newSectionRelativePosition)
+    if (newSortIndex === null) return
+    movingSection.sortIndex = newSortIndex
   }
 
   return {
+    calculateNewSortIndex,
     reorderSection
   }
 }
