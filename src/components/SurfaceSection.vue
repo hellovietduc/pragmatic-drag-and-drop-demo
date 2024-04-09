@@ -4,52 +4,54 @@ import DragOverlay from '@/components/DragOverlay.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import SurfacePost from '@/components/SurfacePost.vue'
 import { computed, ref } from 'vue'
-import { useDummyData } from '@/stores/useDummyData'
-import {
-  useDraggableElement,
-  useDropTargetForElements,
-  useDragAndDropAutoScroll,
-  type OnDropPayload,
-  type OnDropFromExternalPayload,
-  isVerticalEdge
-} from '@/composables/useElementDragAndDrop'
+import { useDummyData, type Section, type Post } from '@/stores/useDummyData'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
-import { usePostReorder, type PostDragData } from '@/composables/usePostReorder'
-import type { SectionDragData } from '@/composables/useSectionReorder'
-import { flashElement } from '@/bits/flash'
-import { raf } from '@/bits/raf'
-import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
+import { usePostReorder } from '@/composables/usePostReorder'
+import { scrollAndFlashElement } from '@/bits/flash'
+import {
+  type OnDropPayload,
+  type OnDropExternalPayload,
+  isVerticalEdge
+} from '@/pragmatic-drag-and-drop/helpers'
+import { useAutoScrollForElements } from '@/pragmatic-drag-and-drop/useAutoScrollForElements'
+import { useDraggableElement } from '@/pragmatic-drag-and-drop/useDraggableElement'
+import { useDropTargetForElements } from '@/pragmatic-drag-and-drop/useDropTargetForElements'
+import { useDropTargetForExternal } from '@/pragmatic-drag-and-drop/useDropTargetForExternal'
 
 const props = defineProps<{
   id: string
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload<SectionDragData>): void
+  (e: 'reorder', payload: OnDropPayload<Section>): void
 }>()
 
 const { isVirtualized } = useVirtualizedListState()
-const { useNativeDragPreview } = useNativeDragPreviewState()
-
 const { sectionById, postsBySectionId, createPost, addPost, doesPostExist } = useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
-const { calculateSortIndex, reorderPost } = usePostReorder()
+const { calculateNewSortIndex, reorderPost } = usePostReorder()
 
-const handlePostReorder = ({ sourceData, targetData }: OnDropPayload<PostDragData>) => {
+const handlePostReorder = ({
+  sourceData,
+  targetData,
+  relativePositionToTarget
+}: OnDropPayload<Post>) => {
   console.log(`🚀 ~ dragged post from`, sourceData, `to`, targetData)
-  reorderPost(sourceData, targetData)
+  reorderPost(targetData, sourceData, relativePositionToTarget)
 }
 
 const addPostFromExternal = ({
   sourceData,
-  targetData
-}: OnDropFromExternalPayload<PostDragData>) => {
+  targetData,
+  relativePositionToTarget
+}: OnDropExternalPayload<Post>) => {
   console.log('🚀 dragged external post from', sourceData, 'to', targetData)
+  const sourcePost = sourceData as unknown as Post
   const newPost = createPost({
-    ...sourceData,
+    ...sourcePost,
     sectionId: targetData.sectionId,
-    sortIndex: calculateSortIndex(targetData) ?? sourceData.sortIndex
+    sortIndex: calculateNewSortIndex(targetData, relativePositionToTarget) ?? sourcePost.sortIndex
   })
   if (doesPostExist(newPost.id)) {
     window.alert(`Post ${newPost.id} already exists`)
@@ -61,85 +63,68 @@ const addPostFromExternal = ({
 const rootEl = ref<HTMLElement>()
 const dragHandle = ref<HTMLElement>()
 const scrollContainer = ref<HTMLElement>()
-const itemData = computed<SectionDragData>(() => ({ sectionId: props.id }))
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
 const { isDragging: isDraggingThisSection } = useDraggableElement({
   elementRef: rootEl,
   type: 'section',
-  itemData,
+  data: section,
   dragHandleElementRef: dragHandle,
   dragPreviewComponent: SurfaceSectionDragPreview,
-  dragPreviewComponentProps,
-  useNativeDragPreview: useNativeDragPreview.value
+  dragPreviewComponentProps
 })
 
-const { isDraggingOver, dragIndicatorEdge } = useDropTargetForElements<
-  SectionDragData | PostDragData
->({
-  elementRef: rootEl,
-  types: [
-    {
-      type: 'section',
-      axis: 'horizontal'
-    },
-    {
-      type: 'post',
-      axis: 'vertical'
+const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragIndicatorEdge } =
+  useDropTargetForElements({
+    elementRef: rootEl,
+    types: [
+      {
+        type: 'section',
+        axis: 'horizontal'
+      },
+      {
+        type: 'post',
+        axis: 'vertical'
+      }
+    ],
+    data: section,
+    ignoresNestedDrops: true,
+    onDrop: (payload) => {
+      if (payload.sourceData.type === 'section') {
+        emit('reorder', payload)
+        scrollAndFlashElement(`[data-section-header-id="${payload.sourceData.id}"]`)
+      } else if (payload.sourceData.type === 'post') {
+        handlePostReorder(payload as unknown as OnDropPayload<Post>)
+        scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+      }
     }
-  ],
-  itemData,
-  ignoresInnerDrops: true,
-  onDrop: (payload) => {
-    if (payload.sourceData.type === 'post' && payload.targetData.postId === undefined) {
-      handlePostReorder(payload as OnDropPayload<PostDragData>)
+  })
 
-      raf(async () => {
-        const movedElement = document.querySelector<HTMLElement>(
-          `[data-post-id="${payload.sourceData.postId}"]`
-        )
-        if (!movedElement) return
-        movedElement.scrollIntoView({
-          block: 'center',
-          inline: 'center'
-        })
-        flashElement(movedElement, '#9466e8', 500)
-      })
-
-      return
+const { isDraggingOver: externalIsDraggingOver, dragIndicatorEdge: externalDragIndicatorEdge } =
+  useDropTargetForExternal({
+    elementRef: rootEl,
+    types: [
+      {
+        type: 'post',
+        axis: 'vertical'
+      }
+    ],
+    data: section,
+    ignoresNestedDrops: true,
+    onDrop: (payload) => {
+      if (payload.sourceData.type === 'post') {
+        addPostFromExternal(payload as unknown as OnDropExternalPayload<Post>)
+        scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+      }
     }
-    if (payload.sourceData.type === 'section') {
-      emit('reorder', payload)
+  })
 
-      raf(async () => {
-        const movedElement = document.querySelector<HTMLElement>(
-          `[data-section-header-id="${payload.sourceData.sectionId}"]`
-        )
-        if (!movedElement) return
-        movedElement.scrollIntoView()
-        flashElement(movedElement, '#9466e8', 500)
-      })
-    }
-  },
-  onDropFromExternal: (payload) => {
-    addPostFromExternal(payload)
+useAutoScrollForElements({ scrollContainerElementRef: scrollContainer, type: 'post' })
 
-    raf(async () => {
-      const movedElement = document.querySelector<HTMLElement>(
-        `[data-post-id="${payload.sourceData.id}"]`
-      )
-      if (!movedElement) return
-      movedElement.scrollIntoView({
-        block: 'center',
-        inline: 'center'
-      })
-      flashElement(movedElement, '#9466e8', 500)
-    })
-  }
-})
-
-useDragAndDropAutoScroll({ scrollContainerElementRef: scrollContainer, type: 'post' })
-
+const isDraggingOver = computed(() => internalIsDraggingOver.value || externalIsDraggingOver.value)
+const dragIndicatorEdge = computed(
+  () => internalDragIndicatorEdge.value ?? externalDragIndicatorEdge.value
+)
 const xDragIndicator = computed(
   () => dragIndicatorEdge.value && !isVerticalEdge(dragIndicatorEdge.value)
 )
