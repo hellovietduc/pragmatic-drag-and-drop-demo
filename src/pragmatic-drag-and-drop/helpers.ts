@@ -19,15 +19,15 @@ const EXTERNAL_DRAG_TYPE_PREFIX = 'application/x.pdnd-'
 
 type DragData = Record<string | symbol, unknown>
 
-type ItemData = DragData & {
-  [ITEM_KEY]: true
-  type: string
-}
-
-type ItemDataForExternal = {
+type DragDataForExternal = {
   text?: string
   html?: string
   dragData?: DragData
+}
+
+type ItemData = DragData & {
+  [ITEM_KEY]: true
+  type: string
 }
 
 type RelativePosition = 'before' | 'after'
@@ -62,32 +62,31 @@ const extractItemData = (payload: ElementDragPayload | DropTargetRecord): ItemDa
   return payload.data as ItemData
 }
 
-const makeItemData = <TItemData>(itemData: TItemData & { type: ItemData['type'] }): ItemData => {
-  return { ...itemData, [ITEM_KEY]: true }
+const makeItemData = <TData>(data: TData & { type: ItemData['type'] }): ItemData => {
+  return { ...data, [ITEM_KEY]: true }
 }
 
-const extractExternalDragType = (source: ExternalDragPayload): string | undefined => {
-  return source.types
+const extractExternalDragType = (payload: ExternalDragPayload): string | undefined => {
+  return payload.types
     .find((type) => type.startsWith(EXTERNAL_DRAG_TYPE_PREFIX))
     ?.replace(EXTERNAL_DRAG_TYPE_PREFIX, '')
 }
 
-const extractItemDataFromExternal = (source: ExternalDragPayload): ItemData | null => {
-  const sourceType = extractExternalDragType(source)
+const extractItemDataFromExternal = (payload: ExternalDragPayload): ItemData | null => {
+  const sourceType = extractExternalDragType(payload)
   if (!sourceType) return null
-  const rawData = source.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
+  const rawData = payload.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
   if (!rawData) return null
   return makeItemData({ ...JSON.parse(rawData), type: sourceType })
 }
 
 const makeItemDataForExternal = (
-  itemData: ItemDataForExternal & { type: ItemData['type'] }
+  data: DragDataForExternal & { type: ItemData['type'] }
 ): { [K in NativeMediaType]?: string } => {
   return {
-    'text/plain': itemData.text,
-    'text/html': itemData.html,
-    [`${EXTERNAL_DRAG_TYPE_PREFIX}${itemData.type}`]:
-      itemData.dragData && JSON.stringify(itemData.dragData)
+    'text/plain': data.text,
+    'text/html': data.html,
+    [`${EXTERNAL_DRAG_TYPE_PREFIX}${data.type}`]: data.dragData && JSON.stringify(data.dragData)
   }
 }
 
@@ -125,7 +124,7 @@ export {
 export type {
   DragData,
   ItemData,
-  ItemDataForExternal,
+  DragDataForExternal,
   RelativePosition,
   CanDropPayload,
   CanDropExternalPayload,

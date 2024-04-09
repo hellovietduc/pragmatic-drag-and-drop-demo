@@ -3,7 +3,7 @@ import {
   makeItemDataForExternal,
   type DragData,
   type ItemData,
-  type ItemDataForExternal
+  type DragDataForExternal
 } from '@/pragmatic-drag-and-drop/helpers'
 import { renderNativeDragPreview, type ComponentProps } from '@/pragmatic-drag-and-drop/renderers'
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
@@ -44,7 +44,7 @@ export const useDraggableElement = <
   /**
    * Data to attach with this draggable element when dropped on an external drop target.
    */
-  dataForExternal?: Ref<ItemDataForExternal>
+  dataForExternal?: Ref<DragDataForExternal>
   /**
    * Element to be used as a drag handle.
    * @default elementRef

@@ -26,3 +26,19 @@ export const flashElement = (element: HTMLElement, color: string, ms: number = 2
     })
   })
 }
+
+export const scrollAndFlashElement = (
+  selector: string,
+  color: string = '#9466e8',
+  ms: number = 500
+) => {
+  raf(async () => {
+    const movedElement = document.querySelector<HTMLElement>(selector)
+    if (!movedElement) return
+    movedElement.scrollIntoView({
+      block: 'center',
+      inline: 'center'
+    })
+    flashElement(movedElement, color, ms)
+  })
+}

@@ -1,21 +1,19 @@
 <script setup lang="ts">
-import { flashElement } from '@/bits/flash'
+import { scrollAndFlashElement } from '@/bits/flash'
 import SurfacePostDragPreview from '@/components/SurfacePostDragPreview.vue'
 import DragIndicator, { DragIndicatorOrientation } from '@/components/DragIndicator.vue'
 import { computed, ref } from 'vue'
-import { useDummyData } from '@/stores/useDummyData'
+import { useDummyData, type Post } from '@/stores/useDummyData'
 import { useDraggingState } from '@/stores/useDraggingState'
+import { useDraggableElement } from '@/pragmatic-drag-and-drop/useDraggableElement'
 import {
-  isVerticalEdge,
+  type DragDataForExternal,
   type OnDropPayload,
-  type OnDropFromExternalPayload,
-  useDraggableElement,
-  useDropTargetForElements,
-  type ItemDataForExternal
-} from '@/composables/useElementDragAndDrop'
-import type { PostDragData } from '@/composables/usePostReorder'
-import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
-import { raf } from '@/bits/raf'
+  type OnDropExternalPayload,
+  isVerticalEdge
+} from '@/pragmatic-drag-and-drop/helpers'
+import { useDropTargetForElements } from '@/pragmatic-drag-and-drop/useDropTargetForElements'
+import { useDropTargetForExternal } from '@/pragmatic-drag-and-drop/useDropTargetForExternal'
 
 const props = defineProps<{
   id: string
@@ -23,74 +21,60 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload<PostDragData>): void
-  (e: 'add-from-external', payload: OnDropFromExternalPayload<PostDragData>): void
+  (e: 'reorder', payload: OnDropPayload<Post>): void
+  (e: 'add-from-external', payload: OnDropExternalPayload<Post>): void
 }>()
 
+const { isDraggingPost } = useDraggingState()
 const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
 
-const { isDraggingPost } = useDraggingState()
-const { useNativeDragPreview } = useNativeDragPreviewState()
-
 const rootEl = ref<HTMLElement>()
-const itemData = computed<PostDragData>(() => ({ postId: props.id, sectionId: props.sectionId }))
-const itemDataForExternal = computed<ItemDataForExternal>(() => ({
+
+const dataForExternal = computed<DragDataForExternal>(() => ({
   text: `Post: ${post.value.subject}`,
   html: `<h1>${post.value.subject}</h1><img src="${post.value.attachment}" alt="Attachment" />`,
   dragData: post.value
 }))
+
 const dragPreviewComponentProps = computed(() => ({ id: props.id, isDragPreview: true }))
 
 const { isDragging: isDraggingThisPost } = useDraggableElement({
   elementRef: rootEl,
   type: 'post',
-  itemData,
-  itemDataForExternal,
+  data: post,
+  dataForExternal,
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps,
-  useNativeDragPreview: useNativeDragPreview.value,
   onDragStart: () => (isDraggingPost.value = true),
   onDrop: () => (isDraggingPost.value = false)
 })
 
-const { dragIndicatorEdge } = useDropTargetForElements({
+const { dragIndicatorEdge: internalDragIndicatorEdge } = useDropTargetForElements({
   elementRef: rootEl,
   types: [{ type: 'post', axis: 'vertical' }],
-  itemData,
+  data: post,
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('reorder', payload)
-
-    raf(async () => {
-      const movedElement = document.querySelector<HTMLElement>(
-        `[data-post-id="${payload.sourceData.postId}"]`
-      )
-      if (!movedElement) return
-      movedElement.scrollIntoView({
-        block: 'center',
-        inline: 'center'
-      })
-      flashElement(movedElement, '#9466e8', 500)
-    })
-  },
-  onDropFromExternal: (payload) => {
-    emit('add-from-external', payload)
-
-    raf(async () => {
-      const movedElement = document.querySelector<HTMLElement>(
-        `[data-post-id="${payload.sourceData.id}"]`
-      )
-      if (!movedElement) return
-      movedElement.scrollIntoView({
-        block: 'center',
-        inline: 'center'
-      })
-      flashElement(movedElement, '#9466e8', 500)
-    })
+    scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
   }
 })
 
+const { dragIndicatorEdge: externalDragIndicatorEdge } = useDropTargetForExternal({
+  elementRef: rootEl,
+  types: [{ type: 'post', axis: 'vertical' }],
+  data: post,
+  onDrop: (payload) => {
+    isDraggingPost.value = false
+    emit('add-from-external', payload)
+    scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+  }
+})
+
+const dragIndicatorEdge = computed(
+  () => internalDragIndicatorEdge.value ?? externalDragIndicatorEdge.value
+)
 const xDragIndicator = computed(
   () => dragIndicatorEdge.value && isVerticalEdge(dragIndicatorEdge.value)
 )
