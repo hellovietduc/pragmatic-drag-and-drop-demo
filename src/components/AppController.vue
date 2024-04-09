@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { useDummyData } from '@/stores/useDummyData'
 import { useVirtualizedListState } from '@/stores/useVirtualizedListState'
-import { useNativeDragPreviewState } from '@/stores/useNativeDragPreviewState'
 
 const { sectionsCount, postsPerSectionCount } = useDummyData()
 const { isVirtualized } = useVirtualizedListState()
-const { useNativeDragPreview } = useNativeDragPreviewState()
-
-const reload = () => {
-  window.location.reload()
-}
 </script>
 
 <template>
@@ -32,15 +26,6 @@ const reload = () => {
         min="1"
         v-model="postsPerSectionCount"
         class="text-center w-12"
-      />
-    </div>
-    <div>
-      <label for="useNativeDragPreview">Use native drag preview:</label>
-      <input
-        id="useNativeDragPreview"
-        type="checkbox"
-        v-model="useNativeDragPreview"
-        @change="reload"
       />
     </div>
     <div>
