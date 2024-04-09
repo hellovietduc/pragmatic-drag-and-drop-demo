@@ -27,7 +27,8 @@ const emit = defineEmits<{
 }>()
 
 const { isVirtualized } = useVirtualizedListState()
-const { sectionById, postsBySectionId, createPost, addPost, doesPostExist } = useDummyData()
+const { sectionById, postById, postsBySectionId, createPost, addPost, doesPostExist } =
+  useDummyData()
 const section = computed(() => sectionById.value[props.id])
 
 const { calculateNewSortIndex, reorderPost } = usePostReorder()
@@ -39,6 +40,12 @@ const handlePostReorder = ({
 }: OnDropPayload<Post>) => {
   console.log(`🚀 ~ dragged post from`, sourceData, `to`, targetData)
   reorderPost(targetData, sourceData, relativePositionToTarget)
+}
+
+const movePostToSection = ({ movingPost, section }: { movingPost: Post; section: Section }) => {
+  const post = postById.value[movingPost.id]
+  if (!post) return
+  post.sectionId = section.id
 }
 
 const addPostFromExternal = ({
@@ -94,7 +101,10 @@ const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragI
         emit('reorder', payload)
         scrollAndFlashElement(`[data-section-header-id="${payload.sourceData.id}"]`)
       } else if (payload.sourceData.type === 'post') {
-        handlePostReorder(payload as unknown as OnDropPayload<Post>)
+        movePostToSection({
+          movingPost: payload.sourceData as unknown as Post,
+          section: payload.targetData
+        })
         scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
       }
     }

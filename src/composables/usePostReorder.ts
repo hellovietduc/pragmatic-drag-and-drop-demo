@@ -3,7 +3,7 @@ import { getSortIndexBetweenItems } from '@/bits/reorder'
 import type { RelativePosition } from '@/pragmatic-drag-and-drop/helpers'
 
 export const usePostReorder = () => {
-  const { postsBySectionId } = useDummyData()
+  const { postsBySectionId, postById } = useDummyData()
 
   const calculateNewSortIndex = (
     anchorPost: Post,
@@ -35,8 +35,10 @@ export const usePostReorder = () => {
   ) => {
     const newSortIndex = calculateNewSortIndex(anchorPost, newPostRelativePosition)
     if (newSortIndex === null) return
-    movingPost.sortIndex = newSortIndex
-    movingPost.sectionId = anchorPost.sectionId
+    const post = postById.value[movingPost.id]
+    if (!post) return
+    post.sortIndex = newSortIndex
+    post.sectionId = anchorPost.sectionId
   }
 
   return {

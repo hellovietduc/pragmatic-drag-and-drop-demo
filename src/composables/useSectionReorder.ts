@@ -5,7 +5,7 @@ import type { RelativePosition } from '@/pragmatic-drag-and-drop/helpers'
 export type SectionDragData = { sectionId: string }
 
 export const useSectionReorder = () => {
-  const { sortedSections } = useDummyData()
+  const { sortedSections, sectionById } = useDummyData()
 
   const calculateNewSortIndex = (
     anchorSection: Section,
@@ -37,7 +37,9 @@ export const useSectionReorder = () => {
   ) => {
     const newSortIndex = calculateNewSortIndex(anchorSection, newSectionRelativePosition)
     if (newSortIndex === null) return
-    movingSection.sortIndex = newSortIndex
+    const section = sectionById.value[movingSection.id]
+    if (!section) return
+    section.sortIndex = newSortIndex
   }
 
   return {
