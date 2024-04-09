@@ -1,6 +1,6 @@
 import { groupBy, keyBy, mapValues, sortBy, uniqueId } from 'lodash-es'
 import { computed, ref, watch } from 'vue'
-import { createSharedComposable, useLocalStorage } from '@vueuse/core'
+import { createSharedComposable, useSessionStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
 
 export interface Section {
@@ -42,8 +42,8 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number): 
 }
 
 export const useDummyData = createSharedComposable(() => {
-  const sectionsCount = useLocalStorage('sectionsCount', 5)
-  const postsPerSectionCount = useLocalStorage('postsPerSectionCount', 20)
+  const sectionsCount = useSessionStorage('sectionsCount', 5)
+  const postsPerSectionCount = useSessionStorage('postsPerSectionCount', 20)
 
   const sections = ref<Section[]>([])
   const posts = ref<Post[]>([])

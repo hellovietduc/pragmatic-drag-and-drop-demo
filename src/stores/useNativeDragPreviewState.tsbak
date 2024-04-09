@@ -1,6 +1,6 @@
-import { createSharedComposable, useLocalStorage } from '@vueuse/core'
+import { createSharedComposable, useSessionStorage } from '@vueuse/core'
 
 export const useNativeDragPreviewState = createSharedComposable(() => {
-  const useNativeDragPreview = useLocalStorage('useNativeDragPreview', true)
+  const useNativeDragPreview = useSessionStorage('useNativeDragPreview', true)
   return { useNativeDragPreview }
 })
