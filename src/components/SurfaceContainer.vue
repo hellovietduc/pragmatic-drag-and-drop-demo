@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { type OnDropPayload } from '@/composables/useElementDragAndDrop'
 import SurfaceSection from '@/components/SurfaceSection.vue'
-import { useDummyData } from '@/stores/useDummyData'
-import { useSectionReorder, type SectionDragData } from '@/composables/useSectionReorder'
+import { useDummyData, type Section } from '@/stores/useDummyData'
+import { useSectionReorder } from '@/composables/useSectionReorder'
+import { type OnDropPayload } from '@/pragmatic-drag-and-drop/helpers'
 
 const { sortedSections } = useDummyData()
 
 const { reorderSection } = useSectionReorder()
 
-const handleSectionReorder = ({ sourceData, targetData }: OnDropPayload<SectionDragData>) => {
-  reorderSection(sourceData, targetData)
+const handleSectionReorder = ({
+  sourceData,
+  targetData,
+  relativePositionToTarget
+}: OnDropPayload<Section>) => {
+  reorderSection(targetData, sourceData, relativePositionToTarget)
 }
 </script>
 
