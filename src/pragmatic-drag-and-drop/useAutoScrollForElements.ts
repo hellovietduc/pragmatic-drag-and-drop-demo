@@ -25,7 +25,7 @@ export const useAutoScrollForElements = ({
       element: scrollContainerElementRef.value,
       canScroll: ({ source }) => {
         // Only auto scroll for draggable elements of the specified type.
-        return extractItemData(source).type === type
+        return extractItemData(source)?.type === type
       }
     })
   }

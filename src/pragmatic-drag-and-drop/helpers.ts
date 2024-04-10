@@ -34,9 +34,9 @@ type ItemData<TData = DragData> = {
 
 type RelativePosition = 'before' | 'after'
 
-type CanDropPayload<TData> = {
-  sourceItem: ItemData<TData>
-  targetItem: ItemData<TData>
+type CanDropPayload<TSourceData, TTargetData> = {
+  sourceItem: ItemData<TSourceData>
+  targetItem: ItemData<TTargetData>
 }
 
 type CanDropExternalPayload<TData> = {
@@ -44,9 +44,9 @@ type CanDropExternalPayload<TData> = {
   targetItem: ItemData<TData>
 }
 
-type OnDropPayload<TData> = {
-  sourceItem: ItemData<TData>
-  targetItem: ItemData<TData>
+type OnDropPayload<TSourceData, TTargetData> = {
+  sourceItem: ItemData<TSourceData>
+  targetItem: ItemData<TTargetData>
   relativePositionToTarget: RelativePosition
 }
 

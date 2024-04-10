@@ -15,7 +15,7 @@ import {
 } from '@/pragmatic-drag-and-drop/helpers'
 import { useAutoScrollForElements } from '@/pragmatic-drag-and-drop/useAutoScrollForElements'
 import { useDraggableElement } from '@/pragmatic-drag-and-drop/useDraggableElement'
-import { useDropTargetForElements } from '@/pragmatic-drag-and-drop/useDropTargetForElements'
+import { useDropTargetElement } from '@/pragmatic-drag-and-drop/useDropTargetElement'
 import { useDropTargetForExternal } from '@/pragmatic-drag-and-drop/useDropTargetForExternal'
 
 const props = defineProps<{
@@ -23,7 +23,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload<Section>): void
+  (e: 'reorder', payload: OnDropPayload<Section, Section>): void
 }>()
 
 const { isVirtualized } = useVirtualizedListState()
@@ -37,7 +37,7 @@ const handlePostReorder = ({
   sourceItem: { data: movingPost },
   targetItem: { data: anchorPost },
   relativePositionToTarget
-}: OnDropPayload<Post>) => {
+}: OnDropPayload<Post, Post>) => {
   console.log(`🚀 ~ reordered post`, movingPost, `to`, anchorPost)
   reorderPost(anchorPost, movingPost, relativePositionToTarget)
 }
@@ -82,35 +82,37 @@ const { isDragging: isDraggingThisSection } = useDraggableElement({
   dragPreviewComponentProps
 })
 
-const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragIndicatorEdge } =
-  useDropTargetForElements({
-    elementRef: rootEl,
-    type: 'section',
-    acceptedDragTypes: [
-      {
-        type: 'section',
-        axis: 'horizontal'
-      },
-      {
-        type: 'post',
-        axis: 'vertical'
-      }
-    ],
-    data: section,
-    ignoresNestedDrops: true,
-    onDrop: (payload) => {
-      if (payload.sourceItem.type === 'section') {
-        emit('reorder', payload)
-        scrollAndFlashElement(`[data-section-header-id="${payload.sourceItem.data.id}"]`)
-      } else if (payload.sourceItem.type === 'post') {
-        movePostToSection({
-          movingPost: payload.sourceItem.data as unknown as Post,
-          section: payload.targetItem.data
-        })
-        scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
-      }
-    }
-  })
+const {
+  isDraggingOver: internalIsDraggingOver,
+  dragIndicatorEdge: internalDragIndicatorEdge,
+  addDraggableSource
+} = useDropTargetElement({
+  elementRef: rootEl,
+  type: 'section',
+  data: section,
+  ignoresNestedDrops: true
+})
+
+addDraggableSource<Section>({
+  type: 'section',
+  axis: 'horizontal',
+  onDrop: (payload) => {
+    emit('reorder', payload)
+    scrollAndFlashElement(`[data-section-header-id="${payload.sourceItem.data.id}"]`)
+  }
+})
+
+addDraggableSource<Post>({
+  type: 'post',
+  axis: 'vertical',
+  onDrop: (payload) => {
+    movePostToSection({
+      movingPost: payload.sourceItem.data as unknown as Post,
+      section: payload.targetItem.data
+    })
+    scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
+  }
+})
 
 const { isDraggingOver: externalIsDraggingOver, dragIndicatorEdge: externalDragIndicatorEdge } =
   useDropTargetForExternal({

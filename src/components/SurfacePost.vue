@@ -12,7 +12,7 @@ import {
   type OnDropExternalPayload,
   isVerticalEdge
 } from '@/pragmatic-drag-and-drop/helpers'
-import { useDropTargetForElements } from '@/pragmatic-drag-and-drop/useDropTargetForElements'
+import { useDropTargetElement } from '@/pragmatic-drag-and-drop/useDropTargetElement'
 import { useDropTargetForExternal } from '@/pragmatic-drag-and-drop/useDropTargetForExternal'
 
 const props = defineProps<{
@@ -21,7 +21,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'reorder', payload: OnDropPayload<Post>): void
+  (e: 'reorder', payload: OnDropPayload<Post, Post>): void
   (e: 'add-from-external', payload: OnDropExternalPayload<Post>): void
 }>()
 
@@ -50,11 +50,15 @@ const { isDragging: isDraggingThisPost } = useDraggableElement({
   onDrop: () => (isDraggingPost.value = false)
 })
 
-const { dragIndicatorEdge: internalDragIndicatorEdge } = useDropTargetForElements({
+const { dragIndicatorEdge: internalDragIndicatorEdge, addDraggableSource } = useDropTargetElement({
   elementRef: rootEl,
   type: 'post',
-  acceptedDragTypes: [{ type: 'post', axis: 'vertical' }],
-  data: post,
+  data: post
+})
+
+addDraggableSource<Post>({
+  type: 'post',
+  axis: 'vertical',
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('reorder', payload)
