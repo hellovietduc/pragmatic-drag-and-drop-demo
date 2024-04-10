@@ -26,6 +26,7 @@ export const useDraggableElement = <
   type,
   data,
   dataForExternal,
+  isDraggable,
   dragHandleElementRef,
   dragPreviewComponent,
   dragPreviewComponentProps,
@@ -49,6 +50,10 @@ export const useDraggableElement = <
    * Data to attach with this draggable element when dropped on an external drop target.
    */
   dataForExternal?: Ref<DragDataForExternal>
+  /**
+   * Whether the element is draggable.
+   */
+  isDraggable?: Ref<boolean>
   /**
    * Element to be used as a drag handle.
    * @default elementRef
@@ -90,6 +95,7 @@ export const useDraggableElement = <
       dragHandle: dragHandleElementRef?.value,
       getInitialData: () => itemData.value,
       getInitialDataForExternal: () => itemDataForExternal.value,
+      canDrag: () => isDraggable?.value ?? true,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         if (!dragPreviewComponent) return
         setCustomNativeDragPreview({

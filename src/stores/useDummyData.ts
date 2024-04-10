@@ -15,6 +15,7 @@ export interface Post {
   subject: string
   attachment: string
   sortIndex: number
+  isPinned: boolean
 }
 
 const generateSections = (count: number): Section[] => {
@@ -36,7 +37,8 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number): 
       sectionId,
       subject: `Post: ${id}`,
       attachment: `https://padlet.net/monsters/${(sectionIndex + 1) * (index + 1)}.png`,
-      sortIndex: index * 10000 + 10000
+      sortIndex: index * 10000 + 10000,
+      isPinned: false
     }
   })
 }
@@ -54,7 +56,8 @@ export const useDummyData = createSharedComposable(() => {
       sectionId: post.sectionId,
       subject: post.subject ?? `New post: ${uniqueId()}`,
       attachment: post.attachment ?? `https://padlet.net/monsters/${posts.value.length}.png`,
-      sortIndex: post.sortIndex ?? 0
+      sortIndex: post.sortIndex ?? 0,
+      isPinned: false
     }
   }
 

@@ -27,6 +27,11 @@ const emit = defineEmits<{
 const { isDraggingPost } = useDraggingState()
 const { postById } = useDummyData()
 const post = computed(() => postById.value[props.id])
+const isPostPinned = computed(() => post.value.isPinned)
+
+const togglePostPin = () => {
+  post.value.isPinned = !post.value.isPinned
+}
 
 const rootEl = ref<HTMLElement>()
 
@@ -43,6 +48,7 @@ const { isDragging: isDraggingThisPost } = useDraggableElement({
   type: 'post',
   data: post,
   dataForExternal,
+  isDraggable: computed(() => !isPostPinned.value),
   dragPreviewComponent: SurfacePostDragPreview,
   dragPreviewComponentProps,
   onDragStart: () => (isDraggingPost.value = true),
@@ -97,6 +103,7 @@ const xDragIndicator = computed(
     <article
       v-show="!isDraggingPost"
       :class="[
+        'relative',
         'flex',
         'flex-col',
         'gap-2',
@@ -120,6 +127,15 @@ const xDragIndicator = computed(
         :style="{ width: `200px`, height: `200px` }"
         draggable="false"
       />
+      <div class="absolute top-1 end-1 border border-dotted border-gray-600 rounded p-0.5">
+        <label for="`post-pin-toggle-${post.id}`">{{ isPostPinned ? 'Unpin' : 'Pin' }}</label>
+        <input
+          :id="`post-pin-toggle-${post.id}`"
+          type="checkbox"
+          :value="isPostPinned"
+          @change="togglePostPin"
+        />
+      </div>
     </article>
     <SurfacePostDragPreview
       v-show="isDraggingPost"
