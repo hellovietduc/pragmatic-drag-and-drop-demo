@@ -1,3 +1,4 @@
+import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 import {
   extractExternalDragType,
   extractItemData,
@@ -5,10 +6,11 @@ import {
   extractRelativePositionToTarget,
   isItemData,
   makeItemData,
-  type CanDropExternalPayload,
+  type CanDropPayload,
   type DragData,
+  type DraggableSource,
   type ItemData,
-  type OnDropExternalPayload
+  type OnDropPayload
 } from '@/pragmatic-drag-and-drop/helpers'
 import {
   attachClosestEdge,
@@ -16,21 +18,24 @@ import {
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter'
-import type { CleanupFn } from '@atlaskit/pragmatic-drag-and-drop/types'
-import { keyBy } from 'lodash-es'
-import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
+import type { CleanupFn, ExternalDragType } from '@atlaskit/pragmatic-drag-and-drop/types'
+import { mapValues } from 'lodash-es'
+import type {
+  DropTargetArgs,
+  DropTargetEventPayloadMap
+} from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types'
+
+type EventName = keyof DropTargetEventPayloadMap<ExternalDragType> | 'canDrop'
+type DropTargetListener<T extends EventName> = NonNullable<DropTargetArgs<ExternalDragType>[T]>
 
 /**
  * Makes an element a drop target for external sources.
  */
-export const useDropTargetForExternal = <TData extends DragData>({
+export const useDropTargetForExternal = <TTargetData extends DragData>({
   elementRef,
   type,
-  acceptedDragTypes,
   data,
-  ignoresNestedDrops = false,
-  canDrop,
-  onDrop
+  ignoresNestedDrops = false
 }: {
   /**
    * Element to be made drop target.
@@ -41,39 +46,93 @@ export const useDropTargetForExternal = <TData extends DragData>({
    */
   type: ItemData['type']
   /**
-   * Types of draggable elements that can be dropped on this target.
-   */
-  acceptedDragTypes: { type: ItemData['type']; axis: 'vertical' | 'horizontal' }[]
-  /**
    * Data to attach with this drop target.
    */
-  data: Ref<TData>
+  data: Ref<TTargetData>
   /**
-   * Whether to ignore drop events from inner drop targets.
+   * Whether to ignore drop events from nested drop targets.
    */
   ignoresNestedDrops?: boolean
-  /**
-   * Whether the item can be dropped on the target.
-   */
-  canDrop?: (payload: CanDropExternalPayload<TData>) => boolean
-  /**
-   * Finished a drag and drop operation.
-   */
-  onDrop?: (payload: OnDropExternalPayload<TData>) => void
 }) => {
+  const draggableSourcesByType = ref<Record<ItemData['type'], DraggableSource>>({})
+  const dropTargetListeners = ref<{ [K in EventName]?: DropTargetListener<K>[] }>({})
+
+  const allowedEdgesByType = computed(() => {
+    return mapValues(
+      draggableSourcesByType.value,
+      ({ axis }) => (axis === 'horizontal' ? ['left', 'right'] : ['top', 'bottom']) as Edge[]
+    )
+  })
+
+  const addDropTargetListener = <T extends EventName>(
+    event: T,
+    listener: DropTargetListener<T>
+  ) => {
+    dropTargetListeners.value[event] ||= []
+    // @ts-expect-error Not sure why TS is complaining here.
+    dropTargetListeners.value[event]?.push(listener)
+  }
+
+  /**
+   * Registers a draggable source that can be dropped on this target.
+   */
+  const addDraggableSource = <TSourceData>({
+    type,
+    axis,
+    canDrop,
+    onDrop
+  }: DraggableSource & {
+    /**
+     * Whether the draggable element can be dropped on the target.
+     */
+    canDrop?: (payload: CanDropPayload<TSourceData, TTargetData>) => boolean
+    /**
+     * Finished a drag and drop operation.
+     */
+    onDrop?: (payload: OnDropPayload<TSourceData, TTargetData>) => void
+  }) => {
+    draggableSourcesByType.value[type] = { type, axis }
+
+    addDropTargetListener('canDrop', ({ source }) => {
+      // Only allow dropping draggable elements of the specified types.
+      const sourceType = extractExternalDragType(source)
+      if (sourceType !== type) return false
+      if (canDrop) {
+        // We enforce external drag sources to have data attached to them
+        // so we can check if they can be dropped on the target.
+        const sourceItem = extractItemDataFromExternal(source)
+        if (!sourceItem) return false
+        return canDrop({
+          sourceItem: sourceItem as ItemData<TSourceData>,
+          targetItem: itemData.value as ItemData<TTargetData>
+        })
+      }
+      return true
+    })
+
+    addDropTargetListener('onDrop', ({ source, location }) => {
+      const target = location.current.dropTargets[0]
+
+      const sourceItem = extractItemDataFromExternal(source) as ItemData<TSourceData>
+      const targetItem = extractItemData(target) as ItemData<TTargetData>
+
+      if (!isItemData(sourceItem) || !isItemData(targetItem)) {
+        return
+      }
+
+      const relativePositionToTarget = extractRelativePositionToTarget(targetItem)
+      if (!relativePositionToTarget) {
+        return
+      }
+
+      onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
+    })
+  }
+
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
   const itemData = computed(() => makeItemData(data.value, type))
-  const allowedEdgesByType = keyBy(
-    acceptedDragTypes.map(({ type, axis }) => {
-      return {
-        type,
-        allowedEdges: axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']
-      } as { type: string; allowedEdges: Edge[] }
-    }),
-    'type'
-  )
 
   const makeElementDropTarget = () => {
     if (!elementRef.value) return () => {}
@@ -89,37 +148,23 @@ export const useDropTargetForExternal = <TData extends DragData>({
         return attachClosestEdge(itemData.value, {
           element: elementRef.value,
           input,
-          allowedEdges: allowedEdgesByType[sourceType].allowedEdges
+          allowedEdges: allowedEdgesByType.value[sourceType]
         })
       },
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
-      canDrop: ({ source }) => {
-        // Only allow dropping draggable elements of the specified types.
-        const sourceType = extractExternalDragType(source)
-        if (!sourceType) return false
-        const isAllowedDragType = acceptedDragTypes.some(({ type }) => type === sourceType)
-        if (!isAllowedDragType) return false
-        if (canDrop) {
-          // We enforce external drag sources to have data attached to them
-          // so we can check if they can be dropped on the target.
-          const sourceItem = extractItemDataFromExternal(source)
-          if (!sourceItem) return false
-          return canDrop({
-            sourceItem,
-            targetItem: itemData.value as ItemData<TData>
-          })
-        }
-        return true
+      canDrop: (e) => {
+        // Allow dropping if any of the draggable sources wants to handle the drop.
+        return dropTargetListeners.value.canDrop?.some((listener) => listener(e)) ?? false
       },
-      onDrag: ({ self }) => {
+      onDrag: (e) => {
         isDraggingOver.value = true
-        dragIndicatorEdge.value = extractClosestEdge(self.data)
+        dragIndicatorEdge.value = extractClosestEdge(e.self.data)
       },
-      onDragLeave() {
+      onDragLeave: () => {
         isDraggingOver.value = false
         dragIndicatorEdge.value = null
       },
-      onDrop: ({ self, source, location }) => {
+      onDrop: (e) => {
         isDraggingOver.value = false
         dragIndicatorEdge.value = null
 
@@ -127,24 +172,11 @@ export const useDropTargetForExternal = <TData extends DragData>({
         // their `onDrop` callbacks executed.
         // Use `ignoresNestedDrops` to skip handling nested drops
         // from an outer drop target.
-        const target = location.current.dropTargets[0]
-        if (!target || (ignoresNestedDrops && self.element !== target.element)) {
+        const target = e.location.current.dropTargets[0]
+        if (!target || (ignoresNestedDrops && e.self.element !== target.element)) {
           return
         }
-
-        const sourceItem = extractItemDataFromExternal(source)
-        const targetItem = extractItemData(target) as ItemData<TData>
-
-        if (!sourceItem || !isItemData(sourceItem) || !isItemData(targetItem)) {
-          return
-        }
-
-        const relativePositionToTarget = extractRelativePositionToTarget(targetItem)
-        if (!relativePositionToTarget) {
-          return
-        }
-
-        onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
+        dropTargetListeners.value.onDrop?.forEach((listener) => listener(e))
       }
     })
   }
@@ -161,6 +193,7 @@ export const useDropTargetForExternal = <TData extends DragData>({
 
   return {
     isDraggingOver,
-    dragIndicatorEdge
+    dragIndicatorEdge,
+    addDraggableSource
   }
 }

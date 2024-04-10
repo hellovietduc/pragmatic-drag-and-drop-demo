@@ -1,6 +1,0 @@
-import { createSharedComposable, useSessionStorage } from '@vueuse/core'
-
-export const useNativeDragPreviewState = createSharedComposable(() => {
-  const useNativeDragPreview = useSessionStorage('useNativeDragPreview', true)
-  return { useNativeDragPreview }
-})

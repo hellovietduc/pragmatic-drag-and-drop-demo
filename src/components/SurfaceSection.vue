@@ -8,11 +8,7 @@ import { useDummyData, type Section, type Post } from '@/stores/useDummyData'
 import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vue'
 import { usePostReorder } from '@/composables/usePostReorder'
 import { scrollAndFlashElement } from '@/bits/flash'
-import {
-  type OnDropPayload,
-  type OnDropExternalPayload,
-  isVerticalEdge
-} from '@/pragmatic-drag-and-drop/helpers'
+import { type OnDropPayload, isVerticalEdge } from '@/pragmatic-drag-and-drop/helpers'
 import { useAutoScrollForElements } from '@/pragmatic-drag-and-drop/useAutoScrollForElements'
 import { useDraggableElement } from '@/pragmatic-drag-and-drop/useDraggableElement'
 import { useDropTargetElement } from '@/pragmatic-drag-and-drop/useDropTargetElement'
@@ -51,15 +47,30 @@ const movePostToSection = ({ movingPost, section }: { movingPost: Post; section:
 
 const addPostFromExternal = ({
   sourceItem: { data: movingPost },
+  targetItem: { data: section }
+}: OnDropPayload<Post, Section>) => {
+  console.log('🚀 moved external post', movingPost, 'to', section)
+  const newPost = createPost({
+    ...movingPost,
+    sectionId: section.id
+  })
+  if (doesPostExist(newPost.id)) {
+    window.alert(`Post ${newPost.id} already exists`)
+    return
+  }
+  addPost(newPost)
+}
+
+const addAndReorderPostFromExternal = ({
+  sourceItem: { data: movingPost },
   targetItem: { data: anchorPost },
   relativePositionToTarget
-}: OnDropExternalPayload<Post>) => {
+}: OnDropPayload<Post, Post>) => {
   console.log('🚀 dragged external post', movingPost, 'to', anchorPost)
-  const post = movingPost as unknown as Post
   const newPost = createPost({
-    ...post,
-    sectionId: anchorPost.id,
-    sortIndex: calculateNewSortIndex(anchorPost, relativePositionToTarget) ?? post.sortIndex
+    ...movingPost,
+    sectionId: anchorPost.sectionId,
+    sortIndex: calculateNewSortIndex(anchorPost, relativePositionToTarget) ?? movingPost.sortIndex
   })
   if (doesPostExist(newPost.id)) {
     window.alert(`Post ${newPost.id} already exists`)
@@ -114,25 +125,25 @@ addDraggableSource<Post>({
   }
 })
 
-const { isDraggingOver: externalIsDraggingOver, dragIndicatorEdge: externalDragIndicatorEdge } =
-  useDropTargetForExternal({
-    elementRef: rootEl,
-    type: 'section',
-    acceptedDragTypes: [
-      {
-        type: 'post',
-        axis: 'vertical'
-      }
-    ],
-    data: section,
-    ignoresNestedDrops: true,
-    onDrop: (payload) => {
-      if (payload.sourceItem.type === 'post') {
-        addPostFromExternal(payload as unknown as OnDropExternalPayload<Post>)
-        scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
-      }
-    }
-  })
+const {
+  isDraggingOver: externalIsDraggingOver,
+  dragIndicatorEdge: externalDragIndicatorEdge,
+  addDraggableSource: addExternalDraggableSource
+} = useDropTargetForExternal({
+  elementRef: rootEl,
+  type: 'section',
+  data: section,
+  ignoresNestedDrops: true
+})
+
+addExternalDraggableSource<Post>({
+  type: 'post',
+  axis: 'vertical',
+  onDrop: (payload) => {
+    addPostFromExternal(payload)
+    scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
+  }
+})
 
 useAutoScrollForElements({ scrollContainerElementRef: scrollContainer, type: 'post' })
 
@@ -190,7 +201,7 @@ const xDragIndicator = computed(
           :section-id="id"
           class="z-10 last:mb-4"
           @reorder="handlePostReorder"
-          @add-from-external="addPostFromExternal"
+          @add-from-external="addAndReorderPostFromExternal"
         />
       </div>
       <DragOverlay v-if="isDraggingOver && !xDragIndicator" class="absolute inset-x-0 -inset-y-2" />

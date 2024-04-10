@@ -6,6 +6,7 @@ import {
   makeItemData,
   type CanDropPayload,
   type DragData,
+  type DraggableSource,
   type ItemData,
   type OnDropPayload
 } from '@/pragmatic-drag-and-drop/helpers'
@@ -22,17 +23,6 @@ import type {
   DropTargetEventPayloadMap
 } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types'
 
-type DraggableSource = {
-  /**
-   * Type of draggable elements that can be dropped on this target.
-   */
-  type: ItemData['type']
-  /**
-   * Which axis the draggable elements of this type move on.
-   */
-  axis: 'vertical' | 'horizontal'
-}
-
 type EventName = keyof DropTargetEventPayloadMap<ElementDragType> | 'canDrop'
 type DropTargetListener<T extends EventName> = NonNullable<DropTargetArgs<ElementDragType>[T]>
 
@@ -43,7 +33,7 @@ export const useDropTargetElement = <TTargetData extends DragData>({
   elementRef,
   type,
   data,
-  ignoresNestedDrops
+  ignoresNestedDrops = false
 }: {
   /**
    * Element to be made drop target.

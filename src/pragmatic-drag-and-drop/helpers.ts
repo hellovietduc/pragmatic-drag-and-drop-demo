@@ -32,6 +32,17 @@ type ItemData<TData = DragData> = {
   [ITEM_KEY]: true
 }
 
+type DraggableSource = {
+  /**
+   * Type of draggable elements that can be dropped on this target.
+   */
+  type: ItemData['type']
+  /**
+   * Which axis the draggable elements of this type move on.
+   */
+  axis: 'vertical' | 'horizontal'
+}
+
 type RelativePosition = 'before' | 'after'
 
 type CanDropPayload<TSourceData, TTargetData> = {
@@ -131,6 +142,7 @@ export type {
   DragData,
   ItemData,
   DragDataForExternal,
+  DraggableSource,
   RelativePosition,
   CanDropPayload,
   CanDropExternalPayload,
