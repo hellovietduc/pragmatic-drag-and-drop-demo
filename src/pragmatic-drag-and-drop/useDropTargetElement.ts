@@ -15,7 +15,10 @@ import {
   extractClosestEdge,
   type Edge
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import {
+  dropTargetForElements,
+  type ElementDropTargetEventPayloadMap
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 import type { CleanupFn, ElementDragType } from '@atlaskit/pragmatic-drag-and-drop/types'
 import { mapValues } from 'lodash-es'
 import type {
@@ -78,6 +81,9 @@ export const useDropTargetElement = <TTargetData extends DragData>({
     type,
     axis,
     canDrop,
+    onDragEnter,
+    onDrag,
+    onDragLeave,
     onDrop
   }: DraggableSource & {
     /**
@@ -85,9 +91,24 @@ export const useDropTargetElement = <TTargetData extends DragData>({
      */
     canDrop?: (payload: CanDropPayload<TSourceData, TTargetData>) => boolean
     /**
-     * Finished a drag and drop operation.
+     * When this drop target is entered into.
      */
-    onDrop?: (payload: OnDropPayload<TSourceData, TTargetData>) => void
+    onDragEnter?: DropTargetListener<'onDragEnter'>
+    /**
+     * A throttled update of where the the user is currently dragging.
+     */
+    onDrag?: DropTargetListener<'onDrag'>
+    /**
+     * When this drop target is exited from.
+     */
+    onDragLeave?: DropTargetListener<'onDragLeave'>
+    /**
+     * The user has finished a drag and drop operation.
+     */
+    onDrop?: (
+      payload: OnDropPayload<TSourceData, TTargetData>,
+      e: ElementDropTargetEventPayloadMap['onDrop']
+    ) => void
   }) => {
     draggableSourcesByType.value[type] = { type, axis }
 
@@ -103,10 +124,22 @@ export const useDropTargetElement = <TTargetData extends DragData>({
       )
     })
 
-    addDropTargetListener('onDrop', ({ source, location }) => {
-      const target = location.current.dropTargets[0]
+    addDropTargetListener('onDragEnter', (e) => {
+      onDragEnter?.(e)
+    })
 
-      const sourceItem = extractItemData(source) as ItemData<TSourceData>
+    addDropTargetListener('onDrag', (e) => {
+      onDrag?.(e)
+    })
+
+    addDropTargetListener('onDragLeave', (e) => {
+      onDragLeave?.(e)
+    })
+
+    addDropTargetListener('onDrop', (e) => {
+      const target = e.location.current.dropTargets[0]
+
+      const sourceItem = extractItemData(e.source) as ItemData<TSourceData>
       const targetItem = extractItemData(target) as ItemData<TTargetData>
 
       if (!isItemData(sourceItem) || !isItemData(targetItem)) {
@@ -118,7 +151,7 @@ export const useDropTargetElement = <TTargetData extends DragData>({
         return
       }
 
-      onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
+      onDrop?.({ sourceItem, targetItem, relativePositionToTarget }, e)
     })
   }
 
@@ -149,13 +182,18 @@ export const useDropTargetElement = <TTargetData extends DragData>({
         // Allow dropping if any of the draggable sources wants to handle the drop.
         return dropTargetListeners.value.canDrop?.some((listener) => listener(e)) ?? false
       },
+      onDragEnter: (e) => {
+        dropTargetListeners.value.onDragEnter?.forEach((listener) => listener(e))
+      },
       onDrag: (e) => {
         isDraggingOver.value = true
         dragIndicatorEdge.value = extractClosestEdge(e.self.data)
+        dropTargetListeners.value.onDrag?.forEach((listener) => listener(e))
       },
-      onDragLeave: () => {
+      onDragLeave: (e) => {
         isDraggingOver.value = false
         dragIndicatorEdge.value = null
+        dropTargetListeners.value.onDragLeave?.forEach((listener) => listener(e))
       },
       onDrop: (e) => {
         isDraggingOver.value = false

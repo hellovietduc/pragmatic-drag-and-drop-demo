@@ -50,20 +50,9 @@ type CanDropPayload<TSourceData, TTargetData> = {
   targetItem: ItemData<TTargetData>
 }
 
-type CanDropExternalPayload<TData> = {
-  sourceItem: ItemData
-  targetItem: ItemData<TData>
-}
-
 type OnDropPayload<TSourceData, TTargetData> = {
   sourceItem: ItemData<TSourceData>
   targetItem: ItemData<TTargetData>
-  relativePositionToTarget: RelativePosition
-}
-
-type OnDropExternalPayload<TData> = {
-  sourceItem: ItemData
-  targetItem: ItemData<TData>
   relativePositionToTarget: RelativePosition
 }
 
@@ -145,7 +134,5 @@ export type {
   DraggableSource,
   RelativePosition,
   CanDropPayload,
-  CanDropExternalPayload,
-  OnDropPayload,
-  OnDropExternalPayload
+  OnDropPayload
 }

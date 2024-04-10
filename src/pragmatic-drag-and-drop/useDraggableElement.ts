@@ -6,7 +6,10 @@ import {
   type DragDataForExternal
 } from '@/pragmatic-drag-and-drop/helpers'
 import { renderNativeDragPreview, type ComponentProps } from '@/pragmatic-drag-and-drop/renderer'
-import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
+import {
+  draggable,
+  type ElementEventPayloadMap
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer'
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview'
 import type { CleanupFn } from '@atlaskit/pragmatic-drag-and-drop/types'
@@ -27,6 +30,7 @@ export const useDraggableElement = <
   dragPreviewComponent,
   dragPreviewComponentProps,
   onDragStart,
+  onDrag,
   onDrop
 }: {
   /**
@@ -62,11 +66,15 @@ export const useDraggableElement = <
   /**
    * A drag operation has started.
    */
-  onDragStart?: () => void
+  onDragStart?: (e: ElementEventPayloadMap['onDragStart']) => void
   /**
-   * The current element has been dropped.
+   * A throttled update of where the the user is currently dragging.
    */
-  onDrop?: () => void
+  onDrag?: (e: ElementEventPayloadMap['onDrag']) => void
+  /**
+   * The user has finished a drag and drop operation.
+   */
+  onDrop?: (e: ElementEventPayloadMap['onDrop']) => void
 }) => {
   const isDragging = ref(false)
 
@@ -96,15 +104,16 @@ export const useDraggableElement = <
           }
         })
       },
-      onDragStart: () => {
+      onDragStart: (e) => {
         isDragging.value = true
-        onDragStart?.()
+        onDragStart?.(e)
       },
-      onDrop: () => {
+      onDrag,
+      onDrop: (e) => {
         // `onDrop` may not fired if the element is destroyed in a virtualized list.
         // DO NOT handle reordering logic here.
         isDragging.value = false
-        onDrop?.()
+        onDrop?.(e)
       }
     })
   }

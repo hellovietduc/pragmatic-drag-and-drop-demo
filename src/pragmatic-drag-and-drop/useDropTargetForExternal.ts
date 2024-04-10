@@ -80,6 +80,9 @@ export const useDropTargetForExternal = <TTargetData extends DragData>({
     type,
     axis,
     canDrop,
+    onDragEnter,
+    onDrag,
+    onDragLeave,
     onDrop
   }: DraggableSource & {
     /**
@@ -87,9 +90,21 @@ export const useDropTargetForExternal = <TTargetData extends DragData>({
      */
     canDrop?: (payload: CanDropPayload<TSourceData, TTargetData>) => boolean
     /**
+     * When this drop target is entered into.
+     */
+    onDragEnter?: DropTargetListener<'onDragStart'>
+    /**
+     * A throttled update of where the the user is currently dragging.
+     */
+    onDrag?: DropTargetListener<'onDrag'>
+    /**
+     * When this drop target is exited from.
+     */
+    onDragLeave?: DropTargetListener<'onDragLeave'>
+    /**
      * Finished a drag and drop operation.
      */
-    onDrop?: (payload: OnDropPayload<TSourceData, TTargetData>) => void
+    onDrop?: (payload: OnDropPayload<TSourceData, TTargetData>, e: DropTargetEventPayloadMap<ExternalDragType>['onDrop']) => void
   }) => {
     draggableSourcesByType.value[type] = { type, axis }
 
@@ -110,10 +125,22 @@ export const useDropTargetForExternal = <TTargetData extends DragData>({
       return true
     })
 
-    addDropTargetListener('onDrop', ({ source, location }) => {
-      const target = location.current.dropTargets[0]
+    addDropTargetListener('onDragEnter', (e) => {
+      onDragEnter?.(e)
+    })
 
-      const sourceItem = extractItemDataFromExternal(source) as ItemData<TSourceData>
+    addDropTargetListener('onDrag', (e) => {
+      onDrag?.(e)
+    })
+
+    addDropTargetListener('onDragLeave', (e) => {
+      onDragLeave?.(e)
+    })
+
+    addDropTargetListener('onDrop', (e) => {
+      const target = e.location.current.dropTargets[0]
+
+      const sourceItem = extractItemDataFromExternal(e.source) as ItemData<TSourceData>
       const targetItem = extractItemData(target) as ItemData<TTargetData>
 
       if (!isItemData(sourceItem) || !isItemData(targetItem)) {
@@ -125,7 +152,7 @@ export const useDropTargetForExternal = <TTargetData extends DragData>({
         return
       }
 
-      onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
+      onDrop?.({ sourceItem, targetItem, relativePositionToTarget }, e)
     })
   }
 
@@ -156,13 +183,18 @@ export const useDropTargetForExternal = <TTargetData extends DragData>({
         // Allow dropping if any of the draggable sources wants to handle the drop.
         return dropTargetListeners.value.canDrop?.some((listener) => listener(e)) ?? false
       },
+      onDragEnter: (e) => {
+        dropTargetListeners.value.onDragEnter?.forEach((listener) => listener(e))
+      },
       onDrag: (e) => {
         isDraggingOver.value = true
         dragIndicatorEdge.value = extractClosestEdge(e.self.data)
+        dropTargetListeners.value.onDrag?.forEach((listener) => listener(e))
       },
-      onDragLeave: () => {
+      onDragLeave: (e) => {
         isDraggingOver.value = false
         dragIndicatorEdge.value = null
+        dropTargetListeners.value.onDragLeave?.forEach((listener) => listener(e))
       },
       onDrop: (e) => {
         isDraggingOver.value = false
