@@ -64,6 +64,10 @@ const { dragIndicatorEdge: internalDragIndicatorEdge, addDraggableSource } = use
 addDraggableSource<Post>({
   type: 'post',
   axis: 'vertical',
+  // Example when preventing dropping above a pinned post
+  // canDrop: ({ sourceItem, targetItem }) => {
+  //   return sourceItem.data.sortIndex >= targetItem.data.sortIndex
+  // },
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('reorder', payload)
