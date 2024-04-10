@@ -9,7 +9,7 @@ import SurfaceSectionDragPreview from '@/components/SurfaceSectionDragPreview.vu
 import { usePostReorder } from '@/composables/usePostReorder'
 import { scrollAndFlashElement } from '@/bits/flash'
 import { type OnDropPayload, isVerticalEdge } from '@/pragmatic-drag-and-drop/helpers'
-import { useAutoScrollForElements } from '@/pragmatic-drag-and-drop/useAutoScrollForElements'
+import { useAutoScrollElement } from '@/pragmatic-drag-and-drop/useAutoScrollElement'
 import { useDraggableElement } from '@/pragmatic-drag-and-drop/useDraggableElement'
 import { useDropTargetElement } from '@/pragmatic-drag-and-drop/useDropTargetElement'
 import { useDropTargetForExternal } from '@/pragmatic-drag-and-drop/useDropTargetForExternal'
@@ -145,7 +145,7 @@ addExternalDraggableSource<Post>({
   }
 })
 
-useAutoScrollForElements({ scrollContainerElementRef: scrollContainer, type: 'post' })
+useAutoScrollElement({ scrollContainerElementRef: scrollContainer, type: 'post' })
 
 const isDraggingOver = computed(() => internalIsDraggingOver.value || externalIsDraggingOver.value)
 const dragIndicatorEdge = computed(
