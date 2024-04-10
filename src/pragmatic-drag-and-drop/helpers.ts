@@ -25,45 +25,61 @@ type DragDataForExternal = {
   dragData?: DragData
 }
 
-type ItemData = DragData & {
-  [ITEM_KEY]: true
+type ItemData<TData = DragData> = {
+  [K: symbol]: unknown
   type: string
+  data: TData
+  [ITEM_KEY]: true
 }
 
 type RelativePosition = 'before' | 'after'
 
 type CanDropPayload<TData> = {
-  sourceData: ItemData & TData
-  targetData: ItemData & TData
+  sourceItem: ItemData<TData>
+  targetItem: ItemData<TData>
 }
 
 type CanDropExternalPayload<TData> = {
-  sourceData: ItemData
-  targetData: ItemData & TData
+  sourceItem: ItemData
+  targetItem: ItemData<TData>
 }
 
 type OnDropPayload<TData> = {
-  sourceData: ItemData & TData
-  targetData: ItemData & TData
+  sourceItem: ItemData<TData>
+  targetItem: ItemData<TData>
   relativePositionToTarget: RelativePosition
 }
 
 type OnDropExternalPayload<TData> = {
-  sourceData: ItemData
-  targetData: ItemData & TData
+  sourceItem: ItemData
+  targetItem: ItemData<TData>
   relativePositionToTarget: RelativePosition
 }
 
-const isItemData = (data: DragData): data is ItemData => {
+const makeItemData = (data: DragData, type: ItemData['type']): ItemData => {
+  return { data, type, [ITEM_KEY]: true }
+}
+
+const extractItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData | null => {
+  const sourceType = payload.data.type
+  const data = payload.data.data
+  if (!sourceType || !data) return null
+  return { ...payload.data, [ITEM_KEY]: true } as ItemData
+}
+
+const isItemData = (data: any): data is ItemData => {
   return data[ITEM_KEY] === true
 }
 
-const extractItemData = (payload: ElementDragPayload | DropTargetRecord): ItemData => {
-  return payload.data as ItemData
-}
-
-const makeItemData = <TData>(data: TData & { type: ItemData['type'] }): ItemData => {
-  return { ...data, [ITEM_KEY]: true }
+const makeItemDataForExternal = (
+  data: DragDataForExternal,
+  type: ItemData['type']
+): { [K in NativeMediaType]?: string } => {
+  return {
+    'text/plain': data.text,
+    'text/html': data.html,
+    [`${EXTERNAL_DRAG_TYPE_PREFIX}${type}`]: data.dragData && JSON.stringify(data.dragData)
+  }
 }
 
 const extractExternalDragType = (payload: ExternalDragPayload): string | undefined => {
@@ -77,17 +93,7 @@ const extractItemDataFromExternal = (payload: ExternalDragPayload): ItemData | n
   if (!sourceType) return null
   const rawData = payload.getStringData(`${EXTERNAL_DRAG_TYPE_PREFIX}${sourceType}`)
   if (!rawData) return null
-  return makeItemData({ ...JSON.parse(rawData), type: sourceType })
-}
-
-const makeItemDataForExternal = (
-  data: DragDataForExternal & { type: ItemData['type'] }
-): { [K in NativeMediaType]?: string } => {
-  return {
-    'text/plain': data.text,
-    'text/html': data.html,
-    [`${EXTERNAL_DRAG_TYPE_PREFIX}${data.type}`]: data.dragData && JSON.stringify(data.dragData)
-  }
+  return makeItemData(JSON.parse(rawData), sourceType)
 }
 
 const extractPointerPosition = (location: DragLocationHistory): Position => {
@@ -101,8 +107,8 @@ const isVerticalEdge = (edge: Edge): boolean => {
   return edge === 'top' || edge === 'bottom'
 }
 
-const extractRelativePositionToTarget = (target: DragData): RelativePosition | null => {
-  const closestEdge = extractClosestEdge(target)
+const extractRelativePositionToTarget = (data: ItemData): RelativePosition | null => {
+  const closestEdge = extractClosestEdge(data)
   if (!closestEdge) return null
   if (closestEdge === 'top' || closestEdge === 'left') return 'before'
   return 'after'
@@ -112,11 +118,11 @@ export {
   ITEM_KEY,
   EXTERNAL_DRAG_TYPE_PREFIX,
   isItemData,
-  extractItemData,
   makeItemData,
+  extractItemData,
+  makeItemDataForExternal,
   extractExternalDragType,
   extractItemDataFromExternal,
-  makeItemDataForExternal,
   extractPointerPosition,
   isVerticalEdge,
   extractRelativePositionToTarget

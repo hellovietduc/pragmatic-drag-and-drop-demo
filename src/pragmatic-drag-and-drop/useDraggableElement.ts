@@ -70,9 +70,9 @@ export const useDraggableElement = <
 }) => {
   const isDragging = ref(false)
 
-  const itemData = computed(() => makeItemData({ ...data.value, type }))
+  const itemData = computed(() => makeItemData(data.value, type))
   const itemDataForExternal = computed(() =>
-    dataForExternal ? makeItemDataForExternal({ ...dataForExternal.value, type }) : {}
+    dataForExternal ? makeItemDataForExternal(dataForExternal.value, type) : {}
   )
 
   const makeElementDraggable = () => {

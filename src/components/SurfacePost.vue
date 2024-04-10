@@ -58,7 +58,7 @@ const { dragIndicatorEdge: internalDragIndicatorEdge } = useDropTargetForElement
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('reorder', payload)
-    scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+    scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
   }
 })
 
@@ -70,7 +70,7 @@ const { dragIndicatorEdge: externalDragIndicatorEdge } = useDropTargetForExterna
   onDrop: (payload) => {
     isDraggingPost.value = false
     emit('add-from-external', payload)
-    scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+    scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
   }
 })
 

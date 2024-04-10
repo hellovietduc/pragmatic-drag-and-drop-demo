@@ -34,12 +34,12 @@ const section = computed(() => sectionById.value[props.id])
 const { calculateNewSortIndex, reorderPost } = usePostReorder()
 
 const handlePostReorder = ({
-  sourceData,
-  targetData,
+  sourceItem: { data: movingPost },
+  targetItem: { data: anchorPost },
   relativePositionToTarget
 }: OnDropPayload<Post>) => {
-  console.log(`🚀 ~ reordered post`, sourceData, `to`, targetData)
-  reorderPost(targetData, sourceData, relativePositionToTarget)
+  console.log(`🚀 ~ reordered post`, movingPost, `to`, anchorPost)
+  reorderPost(anchorPost, movingPost, relativePositionToTarget)
 }
 
 const movePostToSection = ({ movingPost, section }: { movingPost: Post; section: Section }) => {
@@ -50,16 +50,16 @@ const movePostToSection = ({ movingPost, section }: { movingPost: Post; section:
 }
 
 const addPostFromExternal = ({
-  sourceData,
-  targetData,
+  sourceItem: { data: movingPost },
+  targetItem: { data: anchorPost },
   relativePositionToTarget
 }: OnDropExternalPayload<Post>) => {
-  console.log('🚀 dragged external post', sourceData, 'to', targetData)
-  const sourcePost = sourceData as unknown as Post
+  console.log('🚀 dragged external post', movingPost, 'to', anchorPost)
+  const post = movingPost as unknown as Post
   const newPost = createPost({
-    ...sourcePost,
-    sectionId: targetData.id,
-    sortIndex: calculateNewSortIndex(targetData, relativePositionToTarget) ?? sourcePost.sortIndex
+    ...post,
+    sectionId: anchorPost.id,
+    sortIndex: calculateNewSortIndex(anchorPost, relativePositionToTarget) ?? post.sortIndex
   })
   if (doesPostExist(newPost.id)) {
     window.alert(`Post ${newPost.id} already exists`)
@@ -99,15 +99,15 @@ const { isDraggingOver: internalIsDraggingOver, dragIndicatorEdge: internalDragI
     data: section,
     ignoresNestedDrops: true,
     onDrop: (payload) => {
-      if (payload.sourceData.type === 'section') {
+      if (payload.sourceItem.type === 'section') {
         emit('reorder', payload)
-        scrollAndFlashElement(`[data-section-header-id="${payload.sourceData.id}"]`)
-      } else if (payload.sourceData.type === 'post') {
+        scrollAndFlashElement(`[data-section-header-id="${payload.sourceItem.data.id}"]`)
+      } else if (payload.sourceItem.type === 'post') {
         movePostToSection({
-          movingPost: payload.sourceData as unknown as Post,
-          section: payload.targetData
+          movingPost: payload.sourceItem.data as unknown as Post,
+          section: payload.targetItem.data
         })
-        scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+        scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
       }
     }
   })
@@ -125,9 +125,9 @@ const { isDraggingOver: externalIsDraggingOver, dragIndicatorEdge: externalDragI
     data: section,
     ignoresNestedDrops: true,
     onDrop: (payload) => {
-      if (payload.sourceData.type === 'post') {
+      if (payload.sourceItem.type === 'post') {
         addPostFromExternal(payload as unknown as OnDropExternalPayload<Post>)
-        scrollAndFlashElement(`[data-post-id="${payload.sourceData.id}"]`)
+        scrollAndFlashElement(`[data-post-id="${payload.sourceItem.data.id}"]`)
       }
     }
   })

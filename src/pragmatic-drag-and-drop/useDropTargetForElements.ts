@@ -62,7 +62,7 @@ export const useDropTargetForElements = <TData extends DragData>({
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
-  const itemData = computed(() => makeItemData({ ...data.value, type }))
+  const itemData = computed(() => makeItemData(data.value, type))
   const allowedEdgesByType = keyBy(
     acceptedDragTypes.map(({ type, axis }) => {
       return {
@@ -78,7 +78,10 @@ export const useDropTargetForElements = <TData extends DragData>({
     return dropTargetForElements({
       element: elementRef.value,
       getData: ({ source, input }) => {
-        const sourceType = extractItemData(source).type
+        const sourceType = extractItemData(source)?.type
+        // If we can't identify the type, it's not a drag source we should handle.
+        // This will eventually be cancelled by the `canDrop` check.
+        if (!sourceType) return {}
         if (!elementRef.value) return itemData.value
         // Attach the closest edge to the pointer on the drop target.
         return attachClosestEdge(itemData.value, {
@@ -90,12 +93,13 @@ export const useDropTargetForElements = <TData extends DragData>({
       getIsSticky: () => true, // Remembers last drop target even if the pointer already leaves it.
       canDrop: ({ source }) => {
         // Only allow dropping draggable elements of the specified types.
-        const sourceType = extractItemData(source).type
+        const sourceType = extractItemData(source)?.type
+        if (!sourceType) return false
         const isAllowedDragType = acceptedDragTypes.some(({ type }) => type === sourceType)
         return isAllowedDragType && canDrop
           ? canDrop({
-              sourceData: extractItemData(source) as ItemData & TData,
-              targetData: itemData.value as ItemData & TData
+              sourceItem: extractItemData(source) as ItemData<TData>,
+              targetItem: itemData.value as ItemData<TData>
             })
           : true
       },
@@ -120,19 +124,19 @@ export const useDropTargetForElements = <TData extends DragData>({
           return
         }
 
-        const sourceData = extractItemData(source) as ItemData & TData
-        const targetData = extractItemData(target) as ItemData & TData
+        const sourceItem = extractItemData(source) as ItemData<TData>
+        const targetItem = extractItemData(target) as ItemData<TData>
 
-        if (!isItemData(sourceData) || !isItemData(targetData)) {
+        if (!isItemData(sourceItem) || !isItemData(targetItem)) {
           return
         }
 
-        const relativePositionToTarget = extractRelativePositionToTarget(targetData)
+        const relativePositionToTarget = extractRelativePositionToTarget(targetItem)
         if (!relativePositionToTarget) {
           return
         }
 
-        onDrop?.({ sourceData, targetData, relativePositionToTarget })
+        onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
       }
     })
   }

@@ -64,7 +64,7 @@ export const useDropTargetForExternal = <TData extends DragData>({
   const isDraggingOver = ref(false)
   const dragIndicatorEdge = ref<Edge | null>(null)
 
-  const itemData = computed(() => makeItemData({ ...data.value, type }))
+  const itemData = computed(() => makeItemData(data.value, type))
   const allowedEdgesByType = keyBy(
     acceptedDragTypes.map(({ type, axis }) => {
       return {
@@ -102,11 +102,11 @@ export const useDropTargetForExternal = <TData extends DragData>({
         if (canDrop) {
           // We enforce external drag sources to have data attached to them
           // so we can check if they can be dropped on the target.
-          const sourceData = extractItemDataFromExternal(source)
-          if (!sourceData) return false
+          const sourceItem = extractItemDataFromExternal(source)
+          if (!sourceItem) return false
           return canDrop({
-            sourceData,
-            targetData: itemData.value as ItemData & TData
+            sourceItem,
+            targetItem: itemData.value as ItemData<TData>
           })
         }
         return true
@@ -132,19 +132,19 @@ export const useDropTargetForExternal = <TData extends DragData>({
           return
         }
 
-        const sourceData = extractItemDataFromExternal(source)
-        const targetData = extractItemData(target) as ItemData & TData
+        const sourceItem = extractItemDataFromExternal(source)
+        const targetItem = extractItemData(target) as ItemData<TData>
 
-        if (!sourceData || !isItemData(sourceData) || !isItemData(targetData)) {
+        if (!sourceItem || !isItemData(sourceItem) || !isItemData(targetItem)) {
           return
         }
 
-        const relativePositionToTarget = extractRelativePositionToTarget(targetData)
+        const relativePositionToTarget = extractRelativePositionToTarget(targetItem)
         if (!relativePositionToTarget) {
           return
         }
 
-        onDrop?.({ sourceData, targetData, relativePositionToTarget })
+        onDrop?.({ sourceItem, targetItem, relativePositionToTarget })
       }
     })
   }

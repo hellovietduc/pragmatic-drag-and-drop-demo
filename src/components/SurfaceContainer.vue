@@ -9,12 +9,12 @@ const { sortedSections } = useDummyData()
 const { reorderSection } = useSectionReorder()
 
 const handleSectionReorder = ({
-  sourceData,
-  targetData,
+  sourceItem: { data: movingSection },
+  targetItem: { data: anchorSection },
   relativePositionToTarget
 }: OnDropPayload<Section>) => {
-  console.log(`🚀 ~ reordered section`, sourceData, `to`, targetData)
-  reorderSection(targetData, sourceData, relativePositionToTarget)
+  console.log(`🚀 ~ reordered section`, movingSection, `to`, anchorSection)
+  reorderSection(anchorSection, movingSection, relativePositionToTarget)
 }
 </script>
 

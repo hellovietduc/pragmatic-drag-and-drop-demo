@@ -1,7 +1,4 @@
 TODO:
-- 1. move item data into its own key `data`
-    avoid conflict if the data also has a `type` key itself
-    easier to type cast
 - 2. for dragging a post there's 2 cases:
     source type: always post
     target type: section or post
