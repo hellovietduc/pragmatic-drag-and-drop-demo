@@ -131,7 +131,7 @@ const xDragIndicator = computed(
         :style="{ width: `200px`, height: `200px` }"
         draggable="false"
       />
-      <div class="absolute top-1 end-1 border border-dotted border-gray-600 rounded p-0.5">
+      <div class="absolute top-1 end-1 border border-dotted border-gray-600 rounded p-0.5 text-sm">
         <label for="`post-pin-toggle-${post.id}`">{{ isPostPinned ? 'Unpin' : 'Pin' }}</label>
         <input
           :id="`post-pin-toggle-${post.id}`"
