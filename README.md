@@ -1,6 +1,6 @@
 # Pragmatic Drag and drop demo
 
-This project was created as a POC to adopt [Pragmatic Drag and drop](https://github.com/atlassian/pragmatic-drag-and-drop) as [Padlet](https://padlet.com).
+This project was created as a POC to adopt [Pragmatic Drag and drop](https://github.com/atlassian/pragmatic-drag-and-drop) at [Padlet](https://padlet.com).
 
 It presents the challenges we have to deal with when building a drag and drop experience for large lists of items on a web page:
 
