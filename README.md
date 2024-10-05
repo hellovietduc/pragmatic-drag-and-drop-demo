@@ -15,3 +15,5 @@ Other than that, this project also showcased the potential when using Pragmatic 
 - It can easily be tested with Playwright.
 - It supports virtualized lists for rendering.
 - It's very easy to build drag and drop between 2 windows/tabs or even to an external application.
+
+Visit the live version [here](https://pragmatic-drag-and-drop-demo.duckwho.codes).
