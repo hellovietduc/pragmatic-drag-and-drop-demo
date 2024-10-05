@@ -1,4 +1,4 @@
-import { groupBy, keyBy, mapValues, sortBy, uniqueId } from 'lodash-es'
+import { groupBy, keyBy, mapValues, sortBy, uniqueId, sample } from 'lodash-es'
 import { computed, ref, watch } from 'vue'
 import { createSharedComposable, useSessionStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid'
@@ -13,6 +13,7 @@ export interface Post {
   id: string
   sectionId: string
   subject: string
+  body: string
   attachment: string
   sortIndex: number
   isPinned: boolean
@@ -29,6 +30,19 @@ const generateSections = (count: number): Section[] => {
   })
 }
 
+const getLoremIpsum = (): string => {
+  return sample([
+    'Lorem ipsum dolor sit amet.',
+    'Lorem ipsum dolor sit amet.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit urna eu proin viverra.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit urna eu proin viverra.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit urna eu proin viverra.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit urna eu proin viverra faucibus sem dictum quisque suspendisse hendrerit tempus mi fusce tempor egestas erat bibendum ex.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit urna eu proin viverra faucibus sem dictum quisque suspendisse hendrerit tempus mi fusce tempor egestas erat bibendum ex.',
+    'Lorem ipsum dolor sit amet consectetur adipiscing elit vitae ad dictumst neque fringilla tortor sed enim suspendisse. Sagittis praesent parturient curae justo cursus eu a congue commodo ipsum penatibus quam mollis felis dapibus risus dictum consequat pharetra hendrerit.'
+  ])
+}
+
 const generatePosts = (count: number, sectionId: string, sectionIndex: number): Post[] => {
   return Array.from({ length: count }, (_, index) => {
     const id = nanoid(5)
@@ -36,6 +50,7 @@ const generatePosts = (count: number, sectionId: string, sectionIndex: number): 
       id,
       sectionId,
       subject: `Post: ${id}`,
+      body: getLoremIpsum(),
       attachment: `https://padlet.net/monsters/${(sectionIndex + 1) * (index + 1)}.png`,
       sortIndex: index * 10000 + 10000,
       isPinned: false
@@ -55,6 +70,7 @@ export const useDummyData = createSharedComposable(() => {
       id: post.id ?? nanoid(5),
       sectionId: post.sectionId,
       subject: post.subject ?? `New post: ${uniqueId()}`,
+      body: post.body ?? getLoremIpsum(),
       attachment: post.attachment ?? `https://padlet.net/monsters/${posts.value.length}.png`,
       sortIndex: post.sortIndex ?? 0,
       isPinned: false

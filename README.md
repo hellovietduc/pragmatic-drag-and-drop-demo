@@ -1,58 +1,17 @@
 # pragmatic-drag-and-drop-demo
 
-This template should help get you started developing with Vue 3 in Vite.
+This project was created as a POC to adopt Pragmatic Drag and drop as [Padlet](https://padlet.com).
 
-## Recommended IDE Setup
+It presents the challenges we have to deal with when building a drag and drop experience for large lists of items on a web page:
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Items have rich content, most of the time there's an image in each item.
+- Item height is dynamic as the content is written by the user.
+- When the drag is started, we want to collapse all the items to make it easier to drag on a big page.
+- Because of this, the items have a separate collapsed UI and custom drag preview.
+- Items are grouped in sections, and each section can also be dragged and dropped.
 
-## Type Support for `.vue` Imports in TS
+Other than that, this project also showcased the potential when using Pragmatic Drag and drop:
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-yarn
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-yarn dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-yarn build
-```
-
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-yarn build
-
-# Runs the end-to-end tests
-yarn test:e2e
-# Runs the tests only on Chromium
-yarn test:e2e --project=chromium
-# Runs the tests of a specific file
-yarn test:e2e tests/example.spec.ts
-# Runs the tests in debug mode
-yarn test:e2e --debug
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-yarn lint
-```
+- It can easily be tested with Playwright.
+- It supports virtualized lists for rendering.
+- It's very easy to build drag and drop between 2 windows/tabs or even to an external application.

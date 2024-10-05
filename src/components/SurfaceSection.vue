@@ -199,7 +199,7 @@ const xDragIndicator = computed(
           :key="post.id"
           :id="post.id"
           :section-id="id"
-          class="z-10 last:mb-4"
+          class="z-10 last:mb-4 max-w-full"
           @reorder="handlePostReorder"
           @add-from-external="addAndReorderPostFromExternal"
         />

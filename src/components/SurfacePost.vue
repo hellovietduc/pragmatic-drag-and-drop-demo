@@ -113,6 +113,7 @@ const xDragIndicator = computed(
         'gap-2',
         'rounded-xl',
         'shadow-lg',
+        'max-w-full',
         'w-max',
         'p-2',
         'bg-stone-100',
@@ -121,7 +122,8 @@ const xDragIndicator = computed(
       :data-post-id="id"
     >
       <h2 class="select-none">{{ post.subject }}</h2>
-      <h3 class="select-none text-sm">{{ post.sortIndex }}</h3>
+      <p class="select-none text-sm break-words">{{ post.body }}</p>
+      <p class="select-none text-sm">{{ post.sortIndex }}</p>
       <img
         :src="post.attachment"
         alt="Attachment"
